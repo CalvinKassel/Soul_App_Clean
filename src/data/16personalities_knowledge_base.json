@@ -1,0 +1,421 @@
+{
+  "knowledge_base_version": "1.0",
+  "last_updated": "2025-01-06",
+  "source_documents": [
+    "Psychological Theory Behind the 16 Personality Types",
+    "Comprehensive Exam Prep",
+    "Comprehensive Review of Personality Theories and Assessment"
+  ],
+  "personality_types": {
+    "INTJ": {
+      "name": "The Architect",
+      "role": "Analyst",
+      "core_characteristics": [
+        "Imaginative and strategic thinkers",
+        "Highly analytical and independent",
+        "Excel in long-term planning and innovation",
+        "Driven by rational thought and desire for knowledge",
+        "Decisive and determined",
+        "Natural systems builders"
+      ],
+      "relationships": {
+        "overview": "INTJs seek intellectual connection and deep understanding. They value honesty, competence, and mutual respect. They prefer partners who can engage in stimulating conversations and appreciate their visionary nature. While not overtly emotional, they are deeply loyal and committed to their chosen few.",
+        "compatible_with": ["ENTP", "ENFP", "INTP", "INFJ"],
+        "challenges_with": ["ESFP", "ESTP", "ISFP"],
+        "compatibility_notes": "Often drawn to fellow Intuitive types (N) for intellectual depth and shared vision. Can find balance with Feeling (F) types who help them connect emotionally, while their Thinking (T) provides structure and objective reasoning.",
+        "love_language_tendencies": ["Acts of Service", "Quality Time", "Words of Affirmation (when specific and logical)"]
+      },
+      "communication_style": "Direct, logical, values concise information and precision. May seem reserved initially, preferring to listen and observe. Appreciates clear, rational arguments and dislikes small talk.",
+      "strengths": [
+        "Excellent problem-solvers",
+        "Independent thinkers",
+        "Visionary and strategic",
+        "Highly logical and rational",
+        "Determined and persistent",
+        "Insightful about systems and patterns"
+      ],
+      "weaknesses": [
+        "Can be overly critical of themselves and others",
+        "Reserved and private, sometimes appearing aloof",
+        "May overlook emotional nuances",
+        "Can be perceived as arrogant",
+        "Prone to overthinking",
+        "Impatient with inefficiency"
+      ],
+      "assertive_turbulent_nuances": {
+        "A": "INTJ-A (Assertive Architect): More self-assured, resilient to stress, confident in their abilities and decisions. They trust their rational conclusions and are less swayed by external opinions or self-doubt.",
+        "Turbulent": "INTJ-T (Turbulent Architect): More sensitive to criticism, prone to self-doubt, perfectionistic, and driven by a need for constant improvement. They may experience more internal conflict but are often highly ambitious."
+      },
+      "cognitive_functions": ["Ni (Dominant)", "Te (Auxiliary)", "Fi (Tertiary)", "Se (Inferior)"],
+      "relationship_research_notes": "Research shows INTJs form strong bonds with those who respect their need for autonomy while providing emotional warmth. They particularly value intellectual stimulation and competence in partners."
+    },
+    "ENFP": {
+      "name": "The Campaigner",
+      "role": "Diplomat",
+      "core_characteristics": [
+        "Enthusiastic and creative",
+        "Sociable and free-spirited",
+        "Warm and outgoing",
+        "Curious about people and possibilities",
+        "Thrive on new experiences and connections",
+        "Seek depth and meaning in life"
+      ],
+      "relationships": {
+        "overview": "ENFPs are warm, enthusiastic, and seek authentic connections. They love to explore possibilities with their partners and are highly supportive and encouraging. They value deep emotional bonds, shared adventures, and intellectual stimulation.",
+        "compatible_with": ["INTJ", "INFJ", "INTP", "ENTJ"],
+        "challenges_with": ["ISTJ", "ESTJ", "ISTP"],
+        "compatibility_notes": "Often thrive with Intuitive (N) types who can match their intellectual curiosity. Can find strong connections with Thinking (T) types who provide grounding and structure, while their Feeling (F) brings warmth and empathy.",
+        "love_language_tendencies": ["Words of Affirmation", "Quality Time", "Acts of Service (when it reflects caring)"]
+      },
+      "communication_style": "Expressive, engaging, loves brainstorming and storytelling. Can be highly persuasive and enthusiastic. They enjoy lively discussions and sharing ideas, often jumping between topics.",
+      "strengths": [
+        "Charismatic and inspiring",
+        "Optimistic and enthusiastic",
+        "Excellent communicators",
+        "Spontaneous and adaptable",
+        "Empathetic and compassionate",
+        "Creative and imaginative"
+      ],
+      "weaknesses": [
+        "Can be easily distracted or overcommit",
+        "May avoid conflict or confrontation",
+        "Prone to emotional swings",
+        "Can be disorganized",
+        "May seek too much external validation",
+        "Difficulty with routine tasks"
+      ],
+      "assertive_turbulent_nuances": {
+        "A": "ENFP-A (Assertive Campaigner): More confident in their ideas and charm, less affected by external validation, stable in their enthusiasm. More resilient to stress and more decisive.",
+        "Turbulent": "ENFP-T (Turbulent Campaigner): More self-conscious, seeks external affirmation, highly empathetic to others' feelings, but can be more prone to stress and insecurity."
+      },
+      "cognitive_functions": ["Ne (Dominant)", "Fi (Auxiliary)", "Te (Tertiary)", "Si (Inferior)"],
+      "relationship_research_notes": "ENFPs show highest satisfaction with partners who appreciate their creativity and provide stability without stifling their spontaneity. They need emotional validation and intellectual stimulation."
+    },
+    "INFJ": {
+      "name": "The Advocate",
+      "role": "Diplomat",
+      "core_characteristics": [
+        "Idealistic and principled",
+        "Creative and insightful",
+        "Inspired and independent",
+        "Decisive yet private",
+        "Seek meaning and connection",
+        "Natural mentors and counselors"
+      ],
+      "relationships": {
+        "overview": "INFJs seek deep, meaningful connections and are highly selective about their inner circle. They value authenticity, emotional intimacy, and shared values. They are nurturing partners who invest deeply in relationships.",
+        "compatible_with": ["ENTP", "ENFP", "INTJ", "INFP"],
+        "challenges_with": ["ESTP", "ESFP", "ESTJ"],
+        "compatibility_notes": "Highly compatible with other Intuitive types who share their depth and vision. They appreciate partners who can understand their complex inner world while respecting their need for alone time.",
+        "love_language_tendencies": ["Quality Time", "Words of Affirmation", "Acts of Service"]
+      },
+      "communication_style": "Thoughtful, empathetic, prefers deep conversations over small talk. They listen actively and respond with insight. May need time to process before responding.",
+      "strengths": [
+        "Deeply empathetic and understanding",
+        "Visionary and idealistic",
+        "Excellent at reading people",
+        "Committed and loyal",
+        "Creative problem-solvers",
+        "Natural counselors"
+      ],
+      "weaknesses": [
+        "Can be overly sensitive to criticism",
+        "Prone to perfectionism",
+        "May neglect their own needs",
+        "Can be stubborn about their values",
+        "Tendency to overthink",
+        "May avoid conflict"
+      ],
+      "assertive_turbulent_nuances": {
+        "A": "INFJ-A (Assertive Advocate): More confident in their insights, less affected by stress, better at setting boundaries. More likely to trust their intuition without second-guessing.",
+        "Turbulent": "INFJ-T (Turbulent Advocate): More sensitive to criticism, higher anxiety, prone to self-doubt. Often driven by perfectionism and the need to constantly improve."
+      },
+      "cognitive_functions": ["Ni (Dominant)", "Fe (Auxiliary)", "Ti (Tertiary)", "Se (Inferior)"],
+      "relationship_research_notes": "Research indicates INFJs have highest relationship satisfaction when their emotional and intellectual needs are both met. They need partners who appreciate their depth and sensitivity."
+    },
+    "ENTP": {
+      "name": "The Debater",
+      "role": "Analyst",
+      "core_characteristics": [
+        "Quick, ingenious, and stimulating",
+        "Alert and outspoken",
+        "Love debate and intellectual challenges",
+        "Resourceful in solving complex problems",
+        "Enthusiastic about new ideas",
+        "Natural innovators and entrepreneurs"
+      ],
+      "relationships": {
+        "overview": "ENTPs are intellectually curious and seek partners who can match their mental agility. They enjoy spirited debates and exploring ideas together. They value independence and intellectual growth in relationships.",
+        "compatible_with": ["INFJ", "INTJ", "ENFJ", "INTP"],
+        "challenges_with": ["ISFJ", "ISTJ", "ESFJ"],
+        "compatibility_notes": "Work well with intuitive types who appreciate intellectual exploration. Can find balance with feeling types who provide emotional grounding.",
+        "love_language_tendencies": ["Quality Time", "Words of Affirmation", "Physical Touch"]
+      },
+      "communication_style": "Energetic, debate-oriented, loves exploring multiple perspectives. Quick-witted and articulate, enjoys intellectual sparring and brainstorming sessions.",
+      "strengths": [
+        "Innovative and creative",
+        "Excellent communicators",
+        "Adaptable and resourceful",
+        "Enthusiastic and energetic",
+        "Quick learners",
+        "Natural problem-solvers"
+      ],
+      "weaknesses": [
+        "Can be argumentative",
+        "May struggle with follow-through",
+        "Sometimes insensitive to others' feelings",
+        "Easily bored with routine",
+        "May procrastinate on mundane tasks",
+        "Can be scattered in their focus"
+      ],
+      "assertive_turbulent_nuances": {
+        "A": "ENTP-A (Assertive Debater): More confident in debates, less affected by criticism, stable in their self-image. More resilient and decisive.",
+        "Turbulent": "ENTP-T (Turbulent Debater): More sensitive to feedback, driven by improvement, may experience more stress but also more motivation for growth."
+      },
+      "cognitive_functions": ["Ne (Dominant)", "Ti (Auxiliary)", "Fe (Tertiary)", "Si (Inferior)"],
+      "relationship_research_notes": "ENTPs need intellectual stimulation and freedom in relationships. They thrive with partners who can engage in meaningful discussions and appreciate their innovative thinking."
+    },
+    "INFP": {
+      "name": "The Mediator",
+      "role": "Diplomat",
+      "core_characteristics": [
+        "Idealistic and loyal to their values",
+        "Adaptable and laid-back",
+        "Curious and open-minded",
+        "Seek harmony and authenticity",
+        "Deeply caring and empathetic",
+        "Creative and expressive"
+      ],
+      "relationships": {
+        "overview": "INFPs seek authentic, meaningful relationships built on shared values and deep understanding. They are devoted partners who prioritize emotional connection and personal growth together.",
+        "compatible_with": ["ENFJ", "ENTJ", "INFJ", "ENFP"],
+        "challenges_with": ["ESTJ", "ESTP", "ESFJ"],
+        "compatibility_notes": "Drawn to partners who appreciate their depth and creativity. Work well with those who can provide structure while respecting their need for authenticity.",
+        "love_language_tendencies": ["Quality Time", "Words of Affirmation", "Acts of Service"]
+      },
+      "communication_style": "Gentle, thoughtful, prefers one-on-one conversations. Values authentic expression and may need time to articulate complex feelings and ideas.",
+      "strengths": [
+        "Deeply empathetic",
+        "Creative and artistic",
+        "Adaptable and open-minded",
+        "Loyal and devoted",
+        "Excellent listeners",
+        "Value-driven and principled"
+      ],
+      "weaknesses": [
+        "Overly idealistic",
+        "Take criticism personally",
+        "Difficult to get to know",
+        "May neglect practical matters",
+        "Prone to stress and overwhelm",
+        "Can be indecisive"
+      ],
+      "assertive_turbulent_nuances": {
+        "A": "INFP-A (Assertive Mediator): More confident in their values, less affected by external pressures, better at setting boundaries.",
+        "Turbulent": "INFP-T (Turbulent Mediator): More self-critical, sensitive to stress, driven by perfectionism but also more motivated for personal growth."
+      },
+      "cognitive_functions": ["Fi (Dominant)", "Ne (Auxiliary)", "Si (Tertiary)", "Te (Inferior)"],
+      "relationship_research_notes": "INFPs need partners who respect their values and provide emotional support. They flourish in relationships that allow for personal growth and authentic expression."
+    },
+    "ENTJ": {
+      "name": "The Commander",
+      "role": "Analyst",
+      "core_characteristics": [
+        "Bold, imaginative and strong-willed leaders",
+        "Natural-born leaders",
+        "Charismatic and confident",
+        "Strategic and goal-oriented",
+        "Decisive and assertive",
+        "Enjoy organizing and directing"
+      ],
+      "relationships": {
+        "overview": "ENTJs are ambitious and seek partners who can match their drive and intellect. They value competence, loyalty, and shared goals in relationships.",
+        "compatible_with": ["INFP", "INTP", "ENFP", "INTJ"],
+        "challenges_with": ["ISFP", "ESFP", "ISFJ"],
+        "compatibility_notes": "Work well with partners who appreciate their leadership while maintaining their own independence and goals.",
+        "love_language_tendencies": ["Quality Time", "Acts of Service", "Words of Affirmation"]
+      },
+      "communication_style": "Direct, assertive, goal-focused. They communicate with confidence and expect the same level of directness from others.",
+      "strengths": [
+        "Natural leaders",
+        "Strategic thinkers",
+        "Confident and decisive",
+        "Efficient and organized",
+        "Ambitious and driven",
+        "Excellent at delegating"
+      ],
+      "weaknesses": [
+        "Can be impatient",
+        "May be overly critical",
+        "Sometimes insensitive",
+        "Can be stubborn",
+        "May neglect emotions",
+        "Intolerant of inefficiency"
+      ],
+      "assertive_turbulent_nuances": {
+        "A": "ENTJ-A (Assertive Commander): More confident in leadership, less affected by setbacks, stable in their vision.",
+        "Turbulent": "ENTJ-T (Turbulent Commander): More driven by improvement, sensitive to feedback, higher standards for themselves and others."
+      },
+      "cognitive_functions": ["Te (Dominant)", "Ni (Auxiliary)", "Se (Tertiary)", "Fi (Inferior)"],
+      "relationship_research_notes": "ENTJs need partners who can appreciate their ambition while providing emotional balance and support."
+    },
+    "INTP": {
+      "name": "The Thinker",
+      "role": "Analyst",
+      "core_characteristics": [
+        "Innovative inventors with unquenchable thirst for knowledge",
+        "Logical and objective",
+        "Flexible and adaptable",
+        "Quiet and contained",
+        "Love theoretical concepts",
+        "Independent and original"
+      ],
+      "relationships": {
+        "overview": "INTPs seek intellectual compatibility and independence in relationships. They value partners who can engage in deep discussions and respect their need for autonomy.",
+        "compatible_with": ["ENTJ", "ESTJ", "ENFJ", "INTJ"],
+        "challenges_with": ["ESFJ", "ISFJ", "ESFP"],
+        "compatibility_notes": "Need partners who appreciate their analytical nature and don't pressure them for emotional expression they're not ready to give.",
+        "love_language_tendencies": ["Quality Time", "Acts of Service", "Physical Touch"]
+      },
+      "communication_style": "Logical, precise, may be reserved in emotional discussions. They prefer to think before speaking and value accuracy.",
+      "strengths": [
+        "Logical and analytical",
+        "Creative and innovative",
+        "Independent and original",
+        "Flexible and adaptable",
+        "Objective and fair",
+        "Love learning and growth"
+      ],
+      "weaknesses": [
+        "Can be insensitive",
+        "May withdraw when stressed",
+        "Dislike routine and rules",
+        "Can be absent-minded",
+        "May neglect practical matters",
+        "Difficulty expressing emotions"
+      ],
+      "assertive_turbulent_nuances": {
+        "A": "INTP-A (Assertive Thinker): More confident in their ideas, less affected by criticism, stable in their intellectual pursuits.",
+        "Turbulent": "INTP-T (Turbulent Thinker): More self-critical, driven by perfectionism, higher anxiety about their capabilities."
+      },
+      "cognitive_functions": ["Ti (Dominant)", "Ne (Auxiliary)", "Si (Tertiary)", "Fe (Inferior)"],
+      "relationship_research_notes": "INTPs flourish with partners who give them space to think and explore ideas while providing emotional warmth and stability."
+    },
+    "ENFJ": {
+      "name": "The Protagonist",
+      "role": "Diplomat",
+      "core_characteristics": [
+        "Charismatic and inspiring leaders",
+        "Warm and empathetic",
+        "Excellent communicators",
+        "Natural teachers and mentors",
+        "Idealistic and principled",
+        "Focused on human potential"
+      ],
+      "relationships": {
+        "overview": "ENFJs are devoted partners who prioritize their loved ones' growth and happiness. They seek deep emotional connections and shared values.",
+        "compatible_with": ["INFP", "ISFP", "INTP", "ENTP"],
+        "challenges_with": ["ISTP", "ESTP", "ESTJ"],
+        "compatibility_notes": "Thrive with partners who appreciate their warmth and vision while maintaining their own sense of identity.",
+        "love_language_tendencies": ["Words of Affirmation", "Quality Time", "Acts of Service"]
+      },
+      "communication_style": "Warm, encouraging, focused on others' potential. They excel at reading between the lines and understanding unspoken needs.",
+      "strengths": [
+        "Charismatic and inspiring",
+        "Empathetic and caring",
+        "Excellent communicators",
+        "Natural leaders",
+        "Idealistic and principled",
+        "Good at motivating others"
+      ],
+      "weaknesses": [
+        "Can be overly idealistic",
+        "May neglect their own needs",
+        "Sensitive to criticism",
+        "Can be manipulative",
+        "May struggle with conflict",
+        "Prone to burnout"
+      ],
+      "assertive_turbulent_nuances": {
+        "A": "ENFJ-A (Assertive Protagonist): More confident in their leadership, less affected by others' problems, better boundaries.",
+        "Turbulent": "ENFJ-T (Turbulent Protagonist): More sensitive to others' needs, driven by perfectionism, higher emotional investment in outcomes."
+      },
+      "cognitive_functions": ["Fe (Dominant)", "Ni (Auxiliary)", "Se (Tertiary)", "Ti (Inferior)"],
+      "relationship_research_notes": "ENFJs need partners who appreciate their caring nature while helping them maintain healthy boundaries and self-care."
+    }
+  },
+  "compatibility_research": {
+    "general_principles": {
+      "similarity_attraction": "Empirical research favors similarity, especially in core values, for long-term relationship satisfaction. The more similar partners were, the easier they found it to communicate effectively.",
+      "complementarity_benefits": "Some differences can be complementary - J/P differences allow one partner to handle planning while the other provides spontaneity, but this requires good communication."
+    },
+    "specific_findings": {
+      "nf_types": "NF (Intuitive-Feeling) types were happiest when paired with fellow NF partners (73% satisfaction rate), likely due to shared empathy, values, and communication styles.",
+      "nt_with_nf": "NT types fared better with NF partners (65% satisfaction) than with other NTs (59%), suggesting that complementary people-oriented perspective enhances dynamics.",
+      "sn_importance": "Sharing the Intuition/Sensing (N/S) preference is very helpful for long-term compatibility. An N/S pair might struggle with one finding the other's topics too 'trivial' or too 'impractical'.",
+      "tf_challenges": "A Thinking-Feeling (T/F) difference can be a major source of misunderstanding. A Thinker might inadvertently offend a Feeler with blunt feedback."
+    },
+    "neuroticism_factor": {
+      "high_neuroticism_risk": "High Neuroticism is consistently detrimental to relationship satisfaction. The 'Turbulent' (-T) identity maps to Neuroticism, indicating proneness to worry and emotional volatility.",
+      "low_neuroticism_benefit": "Low Neuroticism (Assertive -A identity) and high Conscientiousness are positive predictors of relationship satisfaction and stability."
+    }
+  },
+  "conversation_starters": {
+    "INTJ": [
+      "What's the most fascinating project or idea you're working on right now?",
+      "If you could redesign any system in the world, what would you choose and why?",
+      "What's a concept or theory that completely changed how you see the world?",
+      "What's the most complex problem you've enjoyed solving?",
+      "If you could have a conversation with any historical figure, who would it be and what would you ask?"
+    ],
+    "ENFP": [
+      "What's something you're really passionate about that most people don't know?",
+      "If you could have dinner with anyone, living or dead, who would it be and what would you ask them?",
+      "What's the most spontaneous thing you've ever done?",
+      "What's a dream or goal that really excites you right now?",
+      "What's the best adventure you've been on recently?"
+    ],
+    "INFJ": [
+      "What cause or mission feels most meaningful to you?",
+      "What's something you believe that others might find surprising?",
+      "How do you recharge after a long, intense day?",
+      "What's a book or idea that's had a profound impact on you?",
+      "What's your vision for how the world could be better?"
+    ],
+    "ENTP": [
+      "What's a topic you could debate for hours?",
+      "What's the most interesting theory or idea you've encountered lately?",
+      "If you could solve any problem in the world, what would you tackle first?",
+      "What's something you've changed your mind about recently?",
+      "What's the most creative solution you've come up with to a problem?"
+    ],
+    "INFP": [
+      "What's something you're creating or working on that you're excited about?",
+      "What values are most important to you in life?",
+      "What's a cause you care deeply about?",
+      "What's your ideal way to spend a free weekend?",
+      "What's something beautiful you've experienced recently?"
+    ],
+    "ENTJ": [
+      "What's a goal you're working toward that really motivates you?",
+      "What's the most challenging leadership situation you've navigated?",
+      "If you could change one thing about how the world works, what would it be?",
+      "What's a skill you're developing right now?",
+      "What's your vision for your future?"
+    ],
+    "INTP": [
+      "What's a theory or concept you find absolutely fascinating?",
+      "What's something you've been researching or learning about lately?",
+      "What's the most interesting connection you've made between different ideas?",
+      "If you could understand any mystery of the universe, what would it be?",
+      "What's a problem you love thinking about?"
+    ],
+    "ENFJ": [
+      "What's something you're helping someone with that you find fulfilling?",
+      "What kind of positive impact do you hope to have on others?",
+      "What's a meaningful conversation you've had recently?",
+      "How do you like to support the people you care about?",
+      "What's something you're passionate about teaching or sharing?"
+    ]
+  }
+}

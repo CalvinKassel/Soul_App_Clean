@@ -2,193 +2,170 @@ import React, { useState } from 'react';
 import {
   View,
   Text,
-  TouchableOpacity,
-  FlatList,
   StyleSheet,
   SafeAreaView,
+  TouchableOpacity,
+  FlatList,
   TextInput,
   Image,
 } from 'react-native';
-import { useSafeAreaInsets } from 'react-native-safe-area-context';
-import { Ionicons } from '@expo/vector-icons';
 import { LinearGradient } from 'expo-linear-gradient';
+import { Ionicons } from '@expo/vector-icons';
+import { useSafeAreaInsets } from 'react-native-safe-area-context';
 
-export default function ListScreen({ navigation }) {
+export default function ListScreen({ navigation, route }) {
   const insets = useSafeAreaInsets();
   const [searchText, setSearchText] = useState('');
 
-  // 20 matches with cycling gradient: purple to blue (1-10), blue to purple (11-20)
+  // Mock data for matches with conversations
   const [matches] = useState([
-    { id: '1', name: 'Alex', lastMessage: 'Hey! How are you doing today?', timestamp: '2m ago', unreadCount: 2 },
-    { id: '2', name: 'Blake', lastMessage: 'Had a great time yesterday!', timestamp: '1h ago', unreadCount: 0 },
-    { id: '3', name: 'Casey', lastMessage: 'Did you see that new movie?', timestamp: '3h ago', unreadCount: 1 },
-    { id: '4', name: 'Drew', lastMessage: 'Sounds good! See you then.', timestamp: '1d ago', unreadCount: 0 },
-    { id: '5', name: 'Emery', lastMessage: 'That sounds like so much fun! 😊', timestamp: '2d ago', unreadCount: 3 },
-    { id: '6', name: 'Finley', lastMessage: 'Let me know when you\'re free!', timestamp: '3d ago', unreadCount: 1 },
-    { id: '7', name: 'Gray', lastMessage: 'I loved that restaurant!', timestamp: '4d ago', unreadCount: 0 },
-    { id: '8', name: 'Harper', lastMessage: 'Can\'t wait for the weekend', timestamp: '5d ago', unreadCount: 2 },
-    { id: '9', name: 'Indigo', lastMessage: 'Thanks for the recommendation', timestamp: '6d ago', unreadCount: 0 },
-    { id: '10', name: 'Jordan', lastMessage: 'Hope you have a great day!', timestamp: '1w ago', unreadCount: 1 },
-    { id: '11', name: 'Kai', lastMessage: 'That concert was amazing!', timestamp: '1w ago', unreadCount: 0 },
-    { id: '12', name: 'Lane', lastMessage: 'See you at the coffee shop', timestamp: '1w ago', unreadCount: 2 },
-    { id: '13', name: 'Morgan', lastMessage: 'I\'m so excited for this!', timestamp: '1w ago', unreadCount: 0 },
-    { id: '14', name: 'Nico', lastMessage: 'Let\'s plan something fun', timestamp: '2w ago', unreadCount: 1 },
-    { id: '15', name: 'Olive', lastMessage: 'Perfect timing! 🎉', timestamp: '2w ago', unreadCount: 0 },
-    { id: '16', name: 'Parker', lastMessage: 'I agree completely', timestamp: '2w ago', unreadCount: 3 },
-    { id: '17', name: 'Quinn', lastMessage: 'That\'s such good news!', timestamp: '2w ago', unreadCount: 0 },
-    { id: '18', name: 'River', lastMessage: 'Looking forward to it', timestamp: '3w ago', unreadCount: 1 },
-    { id: '19', name: 'Sage', lastMessage: 'You made my day better', timestamp: '3w ago', unreadCount: 0 },
-    { id: '20', name: 'Taylor', lastMessage: 'This is going to be great', timestamp: '3w ago', unreadCount: 2 },
+    {
+      id: 'match1',
+      name: 'Emma',
+      age: '26',
+      lastMessage: 'That sounds amazing! I love hiking too 🏔️',
+      timestamp: '2m ago',
+      unreadCount: 2,
+      photo: 'https://i.pravatar.cc/100?img=1',
+      personalityType: 'ENFP-A',
+      location: 'New York, NY',
+      interests: ['Art', 'Travel', 'Philosophy'],
+      aboutMe: 'Love exploring new places and trying different cuisines. Always up for an adventure and deep conversations.',
+      photos: [
+        'https://i.pravatar.cc/400?img=1',
+        'https://i.pravatar.cc/400?img=2'
+      ],
+      virtueProfile: {
+        getTopVirtues: () => [
+          { virtue: 'WISDOM', customTerm: 'curiosity' },
+          { virtue: 'HUMANITY', customTerm: null }
+        ]
+      }
+    },
+    {
+      id: 'match2',
+      name: 'Sarah',
+      age: '24',
+      lastMessage: 'Coffee sounds perfect! How about 3pm?',
+      timestamp: '1h ago',
+      unreadCount: 0,
+      photo: 'https://i.pravatar.cc/100?img=2',
+      personalityType: 'INFJ-T',
+      location: 'Brooklyn, NY',
+      interests: ['Reading', 'Photography', 'Music'],
+      aboutMe: 'Bookworm and coffee enthusiast. I enjoy meaningful conversations and quiet moments.',
+      photos: [
+        'https://i.pravatar.cc/400?img=3',
+        'https://i.pravatar.cc/400?img=4'
+      ],
+      virtueProfile: {
+        getTopVirtues: () => [
+          { virtue: 'AUTHENTICITY', customTerm: null },
+          { virtue: 'WISDOM', customTerm: 'insight' }
+        ]
+      }
+    },
+    {
+      id: 'match3',
+      name: 'Jessica',
+      age: '28',
+      lastMessage: 'Your travel photos are incredible!',
+      timestamp: '3h ago',
+      unreadCount: 1,
+      photo: 'https://i.pravatar.cc/100?img=3',
+      personalityType: 'ESFP-A',
+      location: 'Manhattan, NY',
+      interests: ['Fitness', 'Dance', 'Cooking'],
+      aboutMe: 'Yoga instructor who loves to dance and cook healthy meals. Life is about balance and joy!',
+      photos: [
+        'https://i.pravatar.cc/400?img=5',
+        'https://i.pravatar.cc/400?img=6'
+      ],
+      virtueProfile: {
+        getTopVirtues: () => [
+          { virtue: 'VITALITY', customTerm: 'energy' },
+          { virtue: 'HUMANITY', customTerm: 'kindness' }
+        ]
+      }
+    },
+    {
+      id: 'match4',
+      name: 'Alex',
+      age: '27',
+      lastMessage: 'Looking forward to our chat!',
+      timestamp: '1d ago',
+      unreadCount: 0,
+      photo: 'https://i.pravatar.cc/100?img=4',
+      personalityType: 'INTJ-A',
+      location: 'Queens, NY',
+      interests: ['Technology', 'Science', 'Gaming'],
+      aboutMe: 'Software engineer with a passion for innovation. I enjoy deep conversations about the future.',
+      photos: [
+        'https://i.pravatar.cc/400?img=7',
+        'https://i.pravatar.cc/400?img=8'
+      ],
+      virtueProfile: {
+        getTopVirtues: () => [
+          { virtue: 'WISDOM', customTerm: 'logic' },
+          { virtue: 'JUSTICE', customTerm: 'fairness' }
+        ]
+      }
+    }
   ]);
 
   // Filter matches based on search text
   const filteredMatches = matches.filter(match =>
-    match.name.toLowerCase().includes(searchText.toLowerCase())
+    match.name.toLowerCase().includes(searchText.toLowerCase()) ||
+    match.lastMessage.toLowerCase().includes(searchText.toLowerCase())
   );
 
-  const renderMatchItem = ({ item, index }) => {
-    // Calculate the position within the image for this match box
-    // We'll use the index to determine which part of the image to show
-    const totalMatches = 20; // Total number of matches
-    const imagePosition = index / (totalMatches - 1); // 0 to 1 progression
-    
-    // Convert to percentage for ImageBackground positioning
-    const backgroundPositionY = `${imagePosition * 100}%`;
-    
-    // Text color gradient - with specific color matching (keeping existing logic)
-    const getTextColorForPosition = (position) => {
-      // Special cases for Lane and Morgan
-      if (index === 11 || index === 12) {
-        // Lane and Morgan: Both get dark purple
-        return '#4A2C6D';
-      }
-      
-      // Special cases for Nico and Olive to match Parker
-      if (index === 13 || index === 14) {
-        // Nico and Olive: Match Parker's color (dark blue-purple)
-        return '#4F5A9A';
-      }
-      
-      // Map index to gradient progression for all others
-      if (index <= 10) {
-        // Alex to Jordan: Dark purple text
-        return '#4A2C6D';
-      } else if (index >= 15 && index <= 16) {
-        // Parker to Quinn: Dark blue progression
-        const stepProgress = (index - 15) / 1;
-        return interpolateColor('#4F5A9A', '#4A5D8C', stepProgress);
-      } else if (index >= 17 && index <= 19) {
-        // River to Taylor: Continue toward midnight blue
-        const stepProgress = (index - 17) / 2;
-        return interpolateColor('#4A5D8C', '#2C4B73', stepProgress);
-      } else {
-        // Fallback
-        return '#2C4B73';
-      }
-    };
+  // Navigate to match chat with proper error handling
+  const navigateToMatchChat = (match) => {
+    try {
+      navigation.navigate('MatchChat', { match });
+    } catch (error) {
+      console.error('Navigation error:', error);
+      // Fallback navigation
+      navigation.navigate('MatchChat', { 
+        match: {
+          id: match.id,
+          name: match.name,
+          personalityType: match.personalityType,
+          age: match.age,
+          location: match.location,
+          interests: match.interests,
+          aboutMe: match.aboutMe,
+          photos: match.photos,
+          virtueProfile: match.virtueProfile
+        }
+      });
+    }
+  };
 
-    // Secondary text color - black throughout for message text
-    const getSecondaryTextColorForPosition = (position) => {
-      return '#000000'; // Black for all message text
-    };
-    
-    // Color interpolation function
-    const interpolateColor = (color1, color2, factor) => {
-      const hex1 = color1.replace('#', '');
-      const hex2 = color2.replace('#', '');
-      
-      const r1 = parseInt(hex1.substr(0, 2), 16);
-      const g1 = parseInt(hex1.substr(2, 2), 16);
-      const b1 = parseInt(hex1.substr(4, 2), 16);
-      
-      const r2 = parseInt(hex2.substr(0, 2), 16);
-      const g2 = parseInt(hex2.substr(2, 2), 16);
-      const b2 = parseInt(hex2.substr(4, 2), 16);
-      
-      const r = Math.round(r1 + (r2 - r1) * factor);
-      const g = Math.round(g1 + (g2 - g1) * factor);
-      const b = Math.round(b1 + (b2 - b1) * factor);
-      
-      return `#${r.toString(16).padStart(2, '0')}${g.toString(16).padStart(2, '0')}${b.toString(16).padStart(2, '0')}`;
-    };
-    
-    // Avatar icon color - matching text colors
-    const getAvatarIconColor = () => {
-      // Special cases for Lane and Morgan
-      if (index === 11 || index === 12) {
-        // Lane and Morgan: Both get dark purple
-        return '#4A2C6D';
-      }
-      
-      // Special cases for Nico and Olive to match Parker
-      if (index === 13 || index === 14) {
-        // Nico and Olive: Match Parker's color (dark blue-purple)
-        return '#4F5A9A';
-      }
-      
-      // Map index to gradient progression for all others
-      if (index <= 10) {
-        // Alex to Jordan: Dark purple icons
-        return '#4A2C6D';
-      } else if (index >= 15 && index <= 16) {
-        // Parker to Quinn: Dark blue progression
-        const stepProgress = (index - 15) / 1;
-        return interpolateColor('#4F5A9A', '#4A5D8C', stepProgress);
-      } else if (index >= 17 && index <= 19) {
-        // River to Taylor: Continue toward midnight blue
-        const stepProgress = (index - 17) / 2;
-        return interpolateColor('#4A5D8C', '#2C4B73', stepProgress);
-      } else {
-        // Fallback
-        return '#2C4B73';
-      }
-    };
-    
-    // Recreate the purple-to-blue gradient from the image
-    const getGradientColors = () => {
-      // Map each box position (0-19) to a position in the gradient (0-1)
-      const progress = index / 19; // 0 to 1 across all boxes
-      
-      // Define the gradient colors from the image
-      const startColor = { r: 173, g: 156, b: 255 }; // Purple on the left
-      const endColor = { r: 156, g: 207, b: 255 };   // Light blue on the right
-      
-      // Interpolate between start and end colors
-      const r = Math.round(startColor.r + (endColor.r - startColor.r) * progress);
-      const g = Math.round(startColor.g + (endColor.g - startColor.g) * progress);
-      const b = Math.round(startColor.b + (endColor.b - startColor.b) * progress);
-      
-      const primaryColor = `rgb(${r}, ${g}, ${b})`;
-      
-      // Create a slightly lighter version for the gradient effect within each box
-      const lighterR = Math.min(255, r + 15);
-      const lighterG = Math.min(255, g + 15);
-      const lighterB = Math.min(255, b + 10);
-      const secondaryColor = `rgb(${lighterR}, ${lighterG}, ${lighterB})`;
-      
-      return [primaryColor, secondaryColor];
-    };
-
-    const gradientColors = getGradientColors();
-
+  const renderMatchItem = ({ item }) => {
     return (
-      <TouchableOpacity
-        style={styles.matchBubble}
-        onPress={() => navigation.navigate('MatchChat', { match: item })}
+      <TouchableOpacity 
+        style={styles.matchItem}
+        onPress={() => navigateToMatchChat(item)}
+        activeOpacity={0.7}
       >
         <LinearGradient
-          colors={gradientColors}
-          start={{ x: 0, y: 0 }}
-          end={{ x: 1, y: 0 }}
-          style={styles.matchBubbleGradient}
+          colors={['#ffffff', '#f8f9fa']}
+          style={styles.matchContent}
         >
-          <View style={styles.matchBubbleContent}>
-            <View style={styles.matchAvatar}>
-              <Ionicons name="person" size={24} color={getAvatarIconColor()} />
+          <Image source={{ uri: item.photo }} style={styles.matchPhoto} />
+          <View style={styles.matchInfo}>
+            <View style={styles.matchHeader}>
+              <Text style={styles.matchName}>{item.name}</Text>
+              <Text style={styles.matchAge}>{item.age}</Text>
             </View>
-            <View style={styles.matchContent}>
-              <Text style={[styles.matchName, { color: getTextColorForPosition(imagePosition) }]}>{item.name}</Text>
-              <Text style={[styles.matchLastMessage, { color: getSecondaryTextColorForPosition(imagePosition) }]} numberOfLines={1}>
+            <View style={styles.matchMessage}>
+              <Text 
+                style={[
+                  styles.lastMessage, 
+                  item.unreadCount > 0 && styles.unreadMessage
+                ]} 
+                numberOfLines={1}>
                 {item.lastMessage}
               </Text>
             </View>
@@ -208,7 +185,7 @@ export default function ListScreen({ navigation }) {
 
   return (
     <SafeAreaView style={styles.container}>
-      {/* Header with very white blue background */}
+      {/* Header with white background matching SoulChatScreen */}
       <View style={styles.headerShadow}>
         <LinearGradient
           colors={['#F8FBFF', '#F8FBFF']} // Same as SoulChatScreen
@@ -291,11 +268,7 @@ export default function ListScreen({ navigation }) {
 const styles = StyleSheet.create({
   container: {
     flex: 1,
-    backgroundColor: '#F8FBFF'
-  },
-  contentContainer: {
-    flex: 1,
-    backgroundColor: '#FFFFFF', // White background instead of gradient
+    backgroundColor: '#fff',
   },
   headerShadow: {
     shadowColor: '#000',
@@ -309,30 +282,32 @@ const styles = StyleSheet.create({
   header: {
     flexDirection: 'row',
     alignItems: 'center',
-    paddingBottom: 8, // Reduced from 12 to 8 (about 0.15cm reduction)
+    backgroundColor: '#fff',
+    paddingBottom: 12,
     paddingHorizontal: 16,
     borderBottomWidth: 1,
-    borderBottomColor: 'rgba(74, 44, 109, 0.1)',
+    borderBottomColor: '#eee',
   },
   soulHeading: {
-    fontSize: 31,
+    fontSize: 28,
     fontWeight: 'bold',
-    color: '#4A2C6D',
+    color: '#0077B6',
     letterSpacing: 1
+  },
+  contentContainer: {
+    flex: 1,
+    backgroundColor: '#fff',
   },
   searchContainer: {
     flexDirection: 'row',
     alignItems: 'center',
-    margin: 16,
-    paddingHorizontal: 16,
-    paddingVertical: 12,
-    backgroundColor: 'rgba(255, 255, 255, 0.9)',
-    borderRadius: 25,
-    shadowColor: '#000',
-    shadowOffset: { width: 0, height: 2 },
-    shadowOpacity: 0.1,
-    shadowRadius: 4,
-    elevation: 3,
+    backgroundColor: '#F8FBFF',
+    marginHorizontal: 16,
+    marginTop: 16,
+    marginBottom: 8,
+    borderRadius: 12,
+    paddingHorizontal: 12,
+    paddingVertical: 8,
   },
   searchIcon: {
     marginRight: 8,
@@ -341,54 +316,66 @@ const styles = StyleSheet.create({
     flex: 1,
     fontSize: 16,
     color: '#4A2C6D',
+    paddingVertical: 4,
   },
   matchesList: {
     paddingHorizontal: 16,
     paddingBottom: 20,
   },
-  matchBubble: {
-    borderRadius: 12,
-    marginBottom: 12,
-    shadowColor: '#000',
-    shadowOffset: { width: 0, height: 2 },
-    shadowOpacity: 0.1,
-    shadowRadius: 4,
-    elevation: 3,
+  matchItem: {
+    marginBottom: 8,
+    borderRadius: 16,
     overflow: 'hidden',
-  },
-  matchBubbleGradient: {
-    borderRadius: 12,
-    flex: 1,
-  },
-  matchBubbleContent: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    padding: 16,
-  },
-  matchAvatar: {
-    width: 50,
-    height: 50,
-    borderRadius: 25,
-    backgroundColor: 'rgba(255, 255, 255, 0.25)', // Semi-transparent white for contrast
-    alignItems: 'center',
-    justifyContent: 'center',
-    marginRight: 12,
+    shadowColor: '#000',
+    shadowOffset: { width: 0, height: 1 },
+    shadowOpacity: 0.1,
+    shadowRadius: 2,
+    elevation: 2,
   },
   matchContent: {
+    flexDirection: 'row',
+    padding: 16,
+    alignItems: 'center',
+  },
+  matchPhoto: {
+    width: 60,
+    height: 60,
+    borderRadius: 30,
+    marginRight: 12,
+  },
+  matchInfo: {
     flex: 1,
-    justifyContent: 'center',
+  },
+  matchHeader: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    marginBottom: 4,
   },
   matchName: {
     fontSize: 18,
     fontWeight: 'bold',
     color: '#4A2C6D',
+    marginRight: 8,
+  },
+  matchAge: {
+    fontSize: 14,
+    color: '#7f8c8d',
+  },
+  matchMessage: {
     marginBottom: 4,
   },
-  matchLastMessage: {
+  lastMessage: {
     fontSize: 14,
-    color: '#000',
+    color: '#666',
+    lineHeight: 18,
+  },
+  unreadMessage: {
+    fontWeight: '600',
+    color: '#4A2C6D',
   },
   matchMeta: {
+    flexDirection: 'row',
+    justifyContent: 'space-between',
     alignItems: 'flex-end',
   },
   timestamp: {
@@ -407,12 +394,12 @@ const styles = StyleSheet.create({
     borderColor: 'rgba(255, 255, 255, 0.7)',
   },
   unreadText: {
-    color: '#113A73', // Deep blue text for readability
+    color: '#113A73',
     fontSize: 12,
     fontWeight: 'bold',
   },
   toolbarContainer: {
-    backgroundColor: '#FFFFFF', // Explicitly white background for Android
+    backgroundColor: '#FFFFFF',
     borderTopWidth: 0,
   },
   toolbar: {
@@ -420,7 +407,7 @@ const styles = StyleSheet.create({
     justifyContent: 'space-evenly',
     alignItems: 'center',
     paddingVertical: 12,
-    backgroundColor: '#FFFFFF', // Explicitly white background
+    backgroundColor: '#FFFFFF',
   },
   toolbarIcon: {
     alignItems: 'center',
@@ -433,10 +420,9 @@ const styles = StyleSheet.create({
     backgroundColor: '#FFFFFF',
     alignItems: 'center',
     justifyContent: 'center',
-    overflow: 'hidden', // Crop icons to circle boundary
-    // Removed all shadow properties for clean look
+    overflow: 'hidden',
   },
   activeIcon: {
-    backgroundColor: '#5A9BD4', // Match SoulChatScreen active icon color
+    backgroundColor: '#5A9BD4',
   },
 });

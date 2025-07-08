@@ -6,7 +6,6 @@ import ListScreen from '../screens/list/ListScreen';
 import ProfileScreen from '../screens/profile/ProfileScreen';
 import MatchChatScreen from '../screens/matches/MatchChatScreen';
 import MatchProfileScreen from '../screens/matches/MatchProfileScreen';
-import PersonalityAssessment from '../components/PersonalityAssessment';
 
 const Tab = createBottomTabNavigator();
 const Stack = createNativeStackNavigator();
@@ -18,20 +17,6 @@ function MatchesStack() {
       <Stack.Screen name="ListScreen" component={ListScreen} />
       <Stack.Screen name="MatchChat" component={MatchChatScreen} />
       <Stack.Screen name="MatchProfile" component={MatchProfileScreen} />
-    </Stack.Navigator>
-  );
-}
-
-// Main app stack that includes personality assessment
-function AppStack() {
-  return (
-    <Stack.Navigator screenOptions={{ headerShown: false }}>
-      <Stack.Screen name="MainTabs" component={TabNavigator} />
-      <Stack.Screen 
-        name="PersonalityAssessment" 
-        component={PersonalityAssessment}
-        options={{ presentation: 'modal' }}
-      />
     </Stack.Navigator>
   );
 }
@@ -62,5 +47,5 @@ function TabNavigator() {
   );
 }
 
-// Export the main app stack instead of just TabNavigator
-export default AppStack;
+// Export the TabNavigator directly (no PersonalityAssessment)
+export default TabNavigator;

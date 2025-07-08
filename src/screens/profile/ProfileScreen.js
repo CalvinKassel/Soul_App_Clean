@@ -22,67 +22,43 @@ export default function ProfileScreen({ navigation, route }) {
   const [showYouModal, setShowYouModal] = useState(false);
   const [youText, setYouText] = useState('');
 
-  // Enhanced profile state with AI-learned data
+  // Enhanced profile state with AI-learned data (NO personality assessment)
   const [profile, setProfile] = useState({
     name: 'You',
     age: '25',
     height: '5\'8"',
     location: 'New York, NY',
     ethnicity: 'Mixed',
-    personalityType: null, // Set by AI after assessment
+    personalityType: null, // Determined through AI conversation, not tests
     interests: ['Travel', 'Photography', 'Cooking', 'Music', 'Fitness', 'Reading'],
     aboutMe: 'Love exploring new places and trying different cuisines. Always up for an adventure and deep conversations.',
-    aiLearnings: {
-      discoveredTraits: [],
-      valueInsights: [],
-      conversationStyle: null,
-      lastUpdated: null
-    },
+    photos: [
+      'https://i.pravatar.cc/400?img=8',
+      'https://i.pravatar.cc/400?img=9'
+    ],
     socialConnections: {
       instagram: false,
-      facebook: false,
+      spotify: false,
+      linkedin: false,
       chatgpt: false,
+    },
+    aiLearnings: {
+      discoveredTraits: ['Creative', 'Adventurous', 'Thoughtful'],
+      virtueProfile: new VirtueProfile('user123'),
+      conversationPatterns: ['Asks deep questions', 'Values authenticity'],
+      lastUpdated: new Date()
     }
   });
 
-  // Mock virtue profile - in real app this would come from Soul AI
-  const [virtueProfile, setVirtueProfile] = useState(new VirtueProfile('user123'));
-
-  useEffect(() => {
-    // Load any AI discoveries from Soul AI conversations
-    loadAIDiscoveries();
-  }, []);
-
-  const loadAIDiscoveries = () => {
-    // In a real app, this would load from Soul AI's learning system
-    // For demo, we'll simulate some discovered insights
-    setProfile(prev => ({
-      ...prev,
-      aiLearnings: {
-        discoveredTraits: [
-          'Values authenticity in relationships',
-          'Prefers deep conversations over small talk',
-          'Seeks intellectual stimulation',
-        ],
-        valueInsights: [
-          'Highly values wisdom and continuous learning',
-          'Prioritizes kindness and empathy',
-          'Appreciates honesty and direct communication'
-        ],
-        conversationStyle: 'Thoughtful and reflective',
-        lastUpdated: new Date()
-      }
-    }));
-
-    // Simulate learned virtues
-    virtueProfile.updateVirtueScore('WISDOM', 0.9, 'ai_learning', 'Values learning and growth');
-    virtueProfile.updateVirtueScore('HUMANITY', 0.8, 'ai_learning', 'Shows empathy and kindness');
-    virtueProfile.updateVirtueScore('INTEGRITY', 0.85, 'ai_learning', 'Values honesty and authenticity');
-  };
+  const virtueProfile = profile.aiLearnings.virtueProfile;
 
   const saveYouText = () => {
-    setProfile({ ...profile, aboutMe: youText });
+    setProfile(prev => ({
+      ...prev,
+      aboutMe: youText
+    }));
     setShowYouModal(false);
+    Alert.alert('Saved', 'Your profile has been updated.');
   };
 
   const toggleSocialConnection = (platform) => {
@@ -95,26 +71,29 @@ export default function ProfileScreen({ navigation, route }) {
     }));
   };
 
-  const navigateToPersonalityTest = () => {
-    navigation.navigate('PersonalityAssessment', {
-      onComplete: (personalityType, testAnswers) => {
-        setProfile(prev => ({
-          ...prev,
-          personalityType,
-          aiLearnings: {
-            ...prev.aiLearnings,
-            lastUpdated: new Date()
-          }
-        }));
-        Alert.alert(
-          'Assessment Complete!', 
-          `Your personality type is ${personalityType}. Soul AI will use this to provide better guidance.`
-        );
-      },
-      onCancel: () => {
-        // User cancelled, no action needed
-      }
-    });
+  const getPersonalityDescription = (type) => {
+    if (!type) return "Soul AI is learning about your personality through your conversations.";
+    
+    const descriptions = {
+      'INFP': 'The Mediator - Creative and idealistic',
+      'ENFP': 'The Campaigner - Enthusiastic and creative',
+      'INFJ': 'The Advocate - Insightful and principled',
+      'ENFJ': 'The Protagonist - Charismatic and inspiring',
+      'ISFP': 'The Adventurer - Artistic and curious',
+      'ESFP': 'The Entertainer - Spontaneous and enthusiastic',
+      'ISTP': 'The Virtuoso - Bold and practical',
+      'ESTP': 'The Entrepreneur - Smart and energetic',
+      'ISFJ': 'The Protector - Warm-hearted and dedicated',
+      'ESFJ': 'The Consul - Caring and social',
+      'ISTJ': 'The Logistician - Practical and fact-minded',
+      'ESTJ': 'The Executive - Efficient and hardworking',
+      'INTJ': 'The Architect - Imaginative and strategic',
+      'ENTJ': 'The Commander - Bold and strong-willed',
+      'INTP': 'The Thinker - Innovative and curious',
+      'ENTP': 'The Debater - Smart and curious'
+    };
+    
+    return descriptions[type] || 'Unique personality discovered through AI';
   };
 
   const ProfileDetail = ({ label, value }) => (
@@ -144,17 +123,12 @@ export default function ProfileScreen({ navigation, route }) {
     if (!profile.personalityType) {
       return (
         <View style={styles.section}>
-          <View style={styles.personalityPrompt}>
-            <Text style={styles.personalityPromptTitle}>🧠 Discover Your Personality</Text>
-            <Text style={styles.personalityPromptText}>
-              Take a quick assessment to help Soul AI understand you better and find more compatible matches.
+          <Text style={styles.sectionTitle}>🧠 Personality Discovery</Text>
+          <View style={styles.personalityContainer}>
+            <Text style={styles.personalityDescription}>
+              Soul AI is learning about your personality through your conversations. 
+              Keep chatting to discover more insights about yourself!
             </Text>
-            <TouchableOpacity 
-              style={styles.personalityTestButton}
-              onPress={navigateToPersonalityTest}
-            >
-              <Text style={styles.personalityTestButtonText}>Take Personality Assessment</Text>
-            </TouchableOpacity>
           </View>
         </View>
       );
@@ -168,12 +142,6 @@ export default function ProfileScreen({ navigation, route }) {
           <Text style={styles.personalityDescription}>
             {getPersonalityDescription(profile.personalityType)}
           </Text>
-          <TouchableOpacity 
-            style={styles.retakeTestButton}
-            onPress={navigateToPersonalityTest}
-          >
-            <Text style={styles.retakeTestText}>Retake Assessment</Text>
-          </TouchableOpacity>
         </View>
       </View>
     );
@@ -200,75 +168,48 @@ export default function ProfileScreen({ navigation, route }) {
       <View style={styles.section}>
         <Text style={styles.sectionTitle}>🤖 Soul AI Insights</Text>
         
-        {/* Core values discovered by AI */}
-        {topVirtues.length > 0 && (
-          <View style={styles.aiInsightGroup}>
-            <Text style={styles.aiInsightGroupTitle}>Your Core Values</Text>
-            {topVirtues.map((virtue, index) => {
-              const virtueData = VirtueCategories[virtue.virtue];
-              const displayName = virtue.customTerm || virtueData?.name || virtue.virtue;
-              
-              return (
-                <View key={index} style={styles.aiInsightItem}>
-                  <Text style={styles.aiInsightText}>✨ {displayName}</Text>
-                  <View style={styles.confidenceBar}>
-                    <View 
-                      style={[
-                        styles.confidenceFill, 
-                        { width: `${virtue.score * 100}%` }
-                      ]} 
-                    />
-                  </View>
-                </View>
-              );
-            })}
-          </View>
-        )}
-
-        {/* Discovered traits */}
+        {/* Discovered Traits */}
         {aiLearnings.discoveredTraits.length > 0 && (
-          <View style={styles.aiInsightGroup}>
-            <Text style={styles.aiInsightGroupTitle}>Discovered Traits</Text>
-            {aiLearnings.discoveredTraits.map((trait, index) => (
-              <View key={index} style={styles.aiInsightItem}>
-                <Text style={styles.aiInsightText}>• {trait}</Text>
+          <View style={styles.subsection}>
+            <Text style={styles.subsectionTitle}>Discovered Traits</Text>
+            <View style={styles.traitsList}>
+              {aiLearnings.discoveredTraits.map((trait, index) => (
+                <View key={index} style={styles.traitTag}>
+                  <Text style={styles.traitText}>{trait}</Text>
+                </View>
+              ))}
+            </View>
+          </View>
+        )}
+
+        {/* Top Virtues */}
+        {topVirtues.length > 0 && (
+          <View style={styles.subsection}>
+            <Text style={styles.subsectionTitle}>Core Values</Text>
+            {topVirtues.map((virtue, index) => (
+              <View key={index} style={styles.virtueItem}>
+                <Text style={styles.virtueName}>
+                  {virtue.customTerm || VirtueCategories[virtue.virtue]?.name || virtue.virtue}
+                </Text>
+                <Text style={styles.virtueScore}>
+                  {Math.round(virtue.score * 100)}% strength
+                </Text>
               </View>
             ))}
           </View>
         )}
 
-        {/* Value insights */}
-        {aiLearnings.valueInsights.length > 0 && (
-          <View style={styles.aiInsightGroup}>
-            <Text style={styles.aiInsightGroupTitle}>What You Value</Text>
-            {aiLearnings.valueInsights.map((insight, index) => (
-              <View key={index} style={styles.aiInsightItem}>
-                <Text style={styles.aiInsightText}>💝 {insight}</Text>
-              </View>
+        {/* Conversation Patterns */}
+        {aiLearnings.conversationPatterns.length > 0 && (
+          <View style={styles.subsection}>
+            <Text style={styles.subsectionTitle}>Communication Style</Text>
+            {aiLearnings.conversationPatterns.map((pattern, index) => (
+              <Text key={index} style={styles.patternText}>• {pattern}</Text>
             ))}
           </View>
-        )}
-
-        {aiLearnings.lastUpdated && (
-          <Text style={styles.aiInsightsUpdated}>
-            Last updated: {aiLearnings.lastUpdated.toLocaleDateString()}
-          </Text>
         )}
       </View>
     );
-  };
-
-  const getPersonalityDescription = (type) => {
-    const descriptions = {
-      'ENFP-A': 'The Assertive Campaigner - Enthusiastic, creative, and confident in social situations.',
-      'ENFP-T': 'The Turbulent Campaigner - Enthusiastic and creative, with a drive for self-improvement.',
-      'INTJ-A': 'The Assertive Architect - Strategic and confident, with a clear vision.',
-      'INTJ-T': 'The Turbulent Architect - Strategic and visionary, always seeking to improve.',
-      'INFJ-A': 'The Assertive Advocate - Idealistic and confident in their vision.',
-      'INFJ-T': 'The Turbulent Advocate - Idealistic with a strong drive for personal growth.',
-    };
-    
-    return descriptions[type] || 'A unique and interesting personality type.';
   };
 
   return (
@@ -280,27 +221,44 @@ export default function ProfileScreen({ navigation, route }) {
         </View>
       </View>
 
-      {/* Content Container */}
       <ScrollView style={styles.contentContainer} showsVerticalScrollIndicator={false}>
-        {/* Profile Picture and Name */}
+        {/* Profile Header */}
         <View style={styles.profileHeader}>
           <View style={styles.profilePictureContainer}>
             <View style={styles.profilePicture}>
-              <Ionicons name="person" size={60} color="#0077B6" />
+              <Ionicons name="person" size={40} color="#0077B6" />
             </View>
             <TouchableOpacity style={styles.editPhotoButton}>
               <Ionicons name="camera" size={16} color="#fff" />
             </TouchableOpacity>
           </View>
           <Text style={styles.profileName}>{profile.name}</Text>
+          <Text style={styles.profileAge}>{profile.age} years old</Text>
         </View>
 
-        {/* Profile Details */}
+        {/* Basic Info Section */}
         <View style={styles.section}>
-          <ProfileDetail label="Age" value={profile.age} />
+          <Text style={styles.sectionTitle}>📝 Basic Info</Text>
           <ProfileDetail label="Height" value={profile.height} />
           <ProfileDetail label="Location" value={profile.location} />
           <ProfileDetail label="Ethnicity" value={profile.ethnicity} />
+        </View>
+
+        {/* About Me Section */}
+        <View style={styles.section}>
+          <View style={styles.sectionHeader}>
+            <Text style={styles.sectionTitle}>💭 About You</Text>
+            <TouchableOpacity 
+              style={styles.editButton}
+              onPress={() => {
+                setYouText(profile.aboutMe);
+                setShowYouModal(true);
+              }}
+            >
+              <Ionicons name="create-outline" size={20} color="#0077B6" />
+            </TouchableOpacity>
+          </View>
+          <Text style={styles.aboutText}>{profile.aboutMe}</Text>
         </View>
 
         {/* Personality Section */}
@@ -309,10 +267,10 @@ export default function ProfileScreen({ navigation, route }) {
         {/* AI Insights Section */}
         {renderAIInsights()}
 
-        {/* Interests */}
+        {/* Interests Section */}
         <View style={styles.section}>
-          <Text style={styles.sectionTitle}>Interests</Text>
-          <View style={styles.interestsContainer}>
+          <Text style={styles.sectionTitle}>🎯 Interests</Text>
+          <View style={styles.interestsList}>
             {profile.interests.map((interest, index) => (
               <View key={index} style={styles.interestTag}>
                 <Text style={styles.interestText}>{interest}</Text>
@@ -321,42 +279,29 @@ export default function ProfileScreen({ navigation, route }) {
           </View>
         </View>
 
-        {/* You Section */}
-        <View style={styles.section}>
-          <TouchableOpacity 
-            style={styles.youButton}
-            onPress={() => {
-              setYouText(profile.aboutMe);
-              setShowYouModal(true);
-            }}
-          >
-            <Text style={styles.youButtonText}>You</Text>
-            <Ionicons name="chevron-forward" size={16} color="#666" />
-          </TouchableOpacity>
-          {profile.aboutMe && (
-            <Text style={styles.aboutMePreview} numberOfLines={2}>
-              {profile.aboutMe}
-            </Text>
-          )}
-        </View>
-
         {/* Social Connections */}
         <View style={styles.section}>
-          <Text style={styles.sectionTitle}>Connect Your Socials</Text>
+          <Text style={styles.sectionTitle}>🔗 Connect Your Accounts</Text>
           <SocialConnection 
-            platform="instagram" 
+            platform="instagram"
             connected={profile.socialConnections.instagram}
             onToggle={() => toggleSocialConnection('instagram')}
             icon="logo-instagram"
           />
           <SocialConnection 
-            platform="facebook" 
-            connected={profile.socialConnections.facebook}
-            onToggle={() => toggleSocialConnection('facebook')}
-            icon="logo-facebook"
+            platform="spotify"
+            connected={profile.socialConnections.spotify}
+            onToggle={() => toggleSocialConnection('spotify')}
+            icon="musical-notes"
           />
           <SocialConnection 
-            platform="chatgpt" 
+            platform="linkedin"
+            connected={profile.socialConnections.linkedin}
+            onToggle={() => toggleSocialConnection('linkedin')}
+            icon="logo-linkedin"
+          />
+          <SocialConnection 
+            platform="chatgpt"
             connected={profile.socialConnections.chatgpt}
             onToggle={() => toggleSocialConnection('chatgpt')}
             icon="chatbubbles"
@@ -395,7 +340,7 @@ export default function ProfileScreen({ navigation, route }) {
         </SafeAreaView>
       </Modal>
 
-      {/* Fixed Bottom Toolbar */}
+      {/* Fixed Bottom Toolbar - CORRECT ICON SIZES */}
       <View style={[styles.toolbarContainer, { paddingBottom: insets.bottom }]}>
         <View style={styles.toolbar}>
           <TouchableOpacity
@@ -405,7 +350,7 @@ export default function ProfileScreen({ navigation, route }) {
             <View style={styles.iconContainer}>
               <Image 
                 source={require('../../../assets/icons/soulchat.png')}
-                style={{ width: 24, height: 24 }}
+                style={{ width: 38, height: 38 }}
                 resizeMode="contain"
               />
             </View>
@@ -417,7 +362,7 @@ export default function ProfileScreen({ navigation, route }) {
             <View style={styles.iconContainer}>
               <Image 
                 source={require('../../../assets/icons/list.png')}
-                style={{ width: 24, height: 24 }}
+                style={{ width: 38, height: 38 }}
                 resizeMode="contain"
               />
             </View>
@@ -426,7 +371,7 @@ export default function ProfileScreen({ navigation, route }) {
             <View style={[styles.iconContainer, styles.activeIcon]}>
               <Image 
                 source={require('../../../assets/icons/profile-active.png')}
-                style={{ width: 24, height: 24 }}
+                style={{ width: 38, height: 38 }}
                 resizeMode="contain"
               />
             </View>
@@ -484,40 +429,60 @@ const styles = StyleSheet.create({
     backgroundColor: '#CAF0F8',
     alignItems: 'center',
     justifyContent: 'center',
+    marginBottom: 16,
   },
   editPhotoButton: {
     position: 'absolute',
-    bottom: 0,
+    bottom: 16,
     right: 0,
+    width: 32,
+    height: 32,
+    borderRadius: 16,
     backgroundColor: '#0077B6',
-    borderRadius: 15,
-    width: 30,
-    height: 30,
-    justifyContent: 'center',
     alignItems: 'center',
+    justifyContent: 'center',
   },
   profileName: {
     fontSize: 24,
     fontWeight: 'bold',
-    color: '#03045E',
-    marginTop: 12,
+    color: '#0077B6',
+    marginBottom: 4,
+  },
+  profileAge: {
+    fontSize: 16,
+    color: '#666',
   },
   section: {
+    marginBottom: 24,
     paddingHorizontal: 16,
-    paddingVertical: 16,
-    borderBottomWidth: 1,
-    borderBottomColor: '#eee',
+  },
+  sectionHeader: {
+    flexDirection: 'row',
+    justifyContent: 'space-between',
+    alignItems: 'center',
+    marginBottom: 12,
   },
   sectionTitle: {
     fontSize: 18,
     fontWeight: 'bold',
-    color: '#03045E',
+    color: '#0077B6',
     marginBottom: 12,
+  },
+  subsection: {
+    marginBottom: 16,
+  },
+  subsectionTitle: {
+    fontSize: 16,
+    fontWeight: '600',
+    color: '#4A2C6D',
+    marginBottom: 8,
   },
   detailRow: {
     flexDirection: 'row',
     justifyContent: 'space-between',
     paddingVertical: 8,
+    borderBottomWidth: 1,
+    borderBottomColor: '#f0f0f0',
   },
   detailLabel: {
     fontSize: 16,
@@ -525,163 +490,112 @@ const styles = StyleSheet.create({
   },
   detailValue: {
     fontSize: 16,
-    color: '#03045E',
+    color: '#0077B6',
     fontWeight: '500',
   },
-  
-  // Personality section styles
-  personalityPrompt: {
-    backgroundColor: '#f8f9fa',
-    padding: 16,
-    borderRadius: 12,
-    borderWidth: 2,
-    borderColor: '#9b59b6',
-    borderStyle: 'dashed',
-  },
-  personalityPromptTitle: {
+  aboutText: {
     fontSize: 16,
-    fontWeight: 'bold',
-    color: '#2c3e50',
-    marginBottom: 8,
+    lineHeight: 24,
+    color: '#333',
   },
-  personalityPromptText: {
-    fontSize: 14,
-    color: '#7f8c8d',
-    lineHeight: 20,
-    marginBottom: 12,
-  },
-  personalityTestButton: {
-    backgroundColor: '#9b59b6',
-    paddingVertical: 10,
-    paddingHorizontal: 16,
-    borderRadius: 8,
-    alignItems: 'center',
-  },
-  personalityTestButtonText: {
-    color: 'white',
-    fontWeight: '600',
-    fontSize: 14,
+  editButton: {
+    padding: 4,
   },
   personalityContainer: {
-    backgroundColor: '#f8f9fa',
+    backgroundColor: '#F8FBFF',
     padding: 16,
     borderRadius: 12,
+    borderLeftWidth: 4,
+    borderLeftColor: '#0077B6',
   },
   personalityType: {
     fontSize: 20,
     fontWeight: 'bold',
-    color: '#9b59b6',
+    color: '#0077B6',
     marginBottom: 8,
   },
   personalityDescription: {
-    fontSize: 14,
-    color: '#7f8c8d',
-    lineHeight: 20,
-    marginBottom: 12,
+    fontSize: 16,
+    color: '#666',
+    lineHeight: 22,
   },
-  retakeTestButton: {
-    alignSelf: 'flex-start',
-  },
-  retakeTestText: {
-    color: '#9b59b6',
-    fontSize: 14,
-    fontWeight: '500',
-  },
-  
-  // AI Insights styles
   aiInsightsEmpty: {
-    backgroundColor: '#f8f9fa',
+    backgroundColor: '#F8FBFF',
     padding: 16,
     borderRadius: 12,
-    borderWidth: 2,
-    borderColor: '#e9ecef',
-    borderStyle: 'dashed',
+    alignItems: 'center',
   },
   aiInsightsEmptyText: {
-    fontSize: 14,
-    color: '#7f8c8d',
-    textAlign: 'center',
-    lineHeight: 20,
-  },
-  aiInsightGroup: {
-    marginBottom: 16,
-  },
-  aiInsightGroupTitle: {
     fontSize: 16,
-    fontWeight: 'bold',
-    color: '#2c3e50',
-    marginBottom: 8,
-  },
-  aiInsightItem: {
-    backgroundColor: '#f8f9fa',
-    padding: 12,
-    borderRadius: 8,
-    marginBottom: 6,
-    borderLeftWidth: 3,
-    borderLeftColor: '#3498db',
-  },
-  aiInsightText: {
-    fontSize: 14,
-    color: '#2c3e50',
-    marginBottom: 4,
-  },
-  confidenceBar: {
-    height: 4,
-    backgroundColor: '#e9ecef',
-    borderRadius: 2,
-    overflow: 'hidden',
-  },
-  confidenceFill: {
-    height: '100%',
-    backgroundColor: '#3498db',
-  },
-  aiInsightsUpdated: {
-    fontSize: 12,
-    color: '#7f8c8d',
-    fontStyle: 'italic',
+    color: '#666',
     textAlign: 'center',
-    marginTop: 8,
+    lineHeight: 22,
   },
-  
-  // Interests styles
-  interestsContainer: {
+  traitsList: {
     flexDirection: 'row',
     flexWrap: 'wrap',
+    gap: 8,
   },
-  interestTag: {
-    backgroundColor: '#CAF0F8',
+  traitTag: {
+    backgroundColor: '#E3F2FD',
     paddingHorizontal: 12,
     paddingVertical: 6,
-    borderRadius: 20,
-    margin: 4,
-    borderWidth: 1,
-    borderColor: '#0077B6',
+    borderRadius: 16,
   },
-  interestText: {
-    color: '#03045E',
+  traitText: {
     fontSize: 14,
+    color: '#0077B6',
+    fontWeight: '500',
   },
-  youButton: {
+  virtueItem: {
     flexDirection: 'row',
     justifyContent: 'space-between',
     alignItems: 'center',
-    paddingVertical: 12,
+    paddingVertical: 8,
+    borderBottomWidth: 1,
+    borderBottomColor: '#f0f0f0',
   },
-  youButtonText: {
+  virtueName: {
     fontSize: 16,
-    color: '#03045E',
+    color: '#333',
     fontWeight: '500',
   },
-  aboutMePreview: {
+  virtueScore: {
+    fontSize: 14,
+    color: '#0077B6',
+    fontWeight: '600',
+  },
+  patternText: {
     fontSize: 14,
     color: '#666',
-    marginTop: 8,
+    marginBottom: 4,
+    lineHeight: 20,
+  },
+  interestsList: {
+    flexDirection: 'row',
+    flexWrap: 'wrap',
+    gap: 8,
+  },
+  interestTag: {
+    backgroundColor: '#F0F8FF',
+    paddingHorizontal: 12,
+    paddingVertical: 8,
+    borderRadius: 20,
+    borderWidth: 1,
+    borderColor: '#B8E6FF',
+  },
+  interestText: {
+    fontSize: 14,
+    color: '#0077B6',
+    fontWeight: '500',
   },
   socialItem: {
     flexDirection: 'row',
     justifyContent: 'space-between',
     alignItems: 'center',
     paddingVertical: 12,
+    borderBottomWidth: 1,
+    borderBottomColor: '#f0f0f0',
   },
   socialInfo: {
     flexDirection: 'row',
@@ -689,37 +603,8 @@ const styles = StyleSheet.create({
   },
   socialText: {
     fontSize: 16,
-    color: '#03045E',
+    color: '#333',
     marginLeft: 12,
-  },
-  bottomPadding: {
-    height: 100,
-  },
-  toolbarContainer: {
-    backgroundColor: '#fff',
-    borderTopWidth: 1,
-    borderTopColor: '#eee',
-  },
-  toolbar: {
-    flexDirection: 'row',
-    justifyContent: 'space-evenly',
-    alignItems: 'center',
-    paddingVertical: 12,
-  },
-  toolbarIcon: {
-    alignItems: 'center',
-    justifyContent: 'center'
-  },
-  iconContainer: {
-    width: 40,
-    height: 40,
-    borderRadius: 20,
-    backgroundColor: '#f0f0f0',
-    alignItems: 'center',
-    justifyContent: 'center',
-  },
-  activeIcon: {
-    backgroundColor: '#0077B6',
   },
   modalContainer: {
     flex: 1,
@@ -729,28 +614,60 @@ const styles = StyleSheet.create({
     flexDirection: 'row',
     justifyContent: 'space-between',
     alignItems: 'center',
-    padding: 16,
+    paddingHorizontal: 16,
+    paddingVertical: 12,
     borderBottomWidth: 1,
     borderBottomColor: '#eee',
   },
   modalCancel: {
     fontSize: 16,
-    color: '#666',
+    color: '#999',
   },
   modalTitle: {
     fontSize: 18,
     fontWeight: 'bold',
-    color: '#03045E',
+    color: '#0077B6',
   },
   modalSave: {
     fontSize: 16,
     color: '#0077B6',
-    fontWeight: 'bold',
+    fontWeight: '600',
   },
   youTextInput: {
     flex: 1,
     padding: 16,
     fontSize: 16,
-    color: '#03045E',
+    color: '#333',
+    textAlignVertical: 'top',
+  },
+  bottomPadding: {
+    height: 20,
+  },
+  toolbarContainer: {
+    backgroundColor: '#FFFFFF',
+    borderTopWidth: 0,
+  },
+  toolbar: {
+    flexDirection: 'row',
+    justifyContent: 'space-evenly',
+    alignItems: 'center',
+    paddingVertical: 12,
+    backgroundColor: '#FFFFFF',
+  },
+  toolbarIcon: {
+    alignItems: 'center',
+    justifyContent: 'center'
+  },
+  iconContainer: {
+    width: 40,
+    height: 40,
+    borderRadius: 20,
+    backgroundColor: '#FFFFFF',
+    alignItems: 'center',
+    justifyContent: 'center',
+    overflow: 'hidden',
+  },
+  activeIcon: {
+    backgroundColor: '#5A9BD4',
   },
 });

@@ -13,9 +13,9 @@ import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import { Ionicons } from '@expo/vector-icons';
 import { LinearGradient } from 'expo-linear-gradient';
 
-// Import compatibility engine for detailed analysis
-import { CompatibilityEngine } from '../services/CompatibilityEngine';
-import { VirtueCategories } from '../models/VirtueProfile';
+// ✅ FIXED IMPORTS - Updated to correct paths
+import { CompatibilityEngine } from '../../services/CompatibilityEngine';
+import { VirtueCategories } from '../../models/VirtueProfile';
 
 const { width } = Dimensions.get('window');
 

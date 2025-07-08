@@ -18,9 +18,9 @@ import { LinearGradient } from 'expo-linear-gradient';
 import { Ionicons } from '@expo/vector-icons';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
 
-// ✅ FIXED IMPORTS - Updated to correct paths
-import { CompatibilityEngine } from '../../services/CompatibilityEngine';
-import { createSoulAIOrchestrator } from '../../services/SoulAIOrchestrator';
+// Import our AI system for conversation assistance
+import { CompatibilityEngine } from '../../lib/services/CompatibilityEngine';
+import { createSoulAIOrchestrator } from '../../lib/services/SoulAIOrchestrator';
 
 export default function MatchChatScreen({ navigation, route }) {
   const insets = useSafeAreaInsets();
@@ -51,18 +51,46 @@ export default function MatchChatScreen({ navigation, route }) {
   const [compatibilityData, setCompatibilityData] = useState(null);
   const [messages, setMessages] = useState([
     { id: '1', from: 'match', text: `Hey! Excited to chat with you 😊` },
-    { id: '2', from: 'user', text: `Hi ${match.name}! Nice to meet you` },
-    { id: '3', from: 'match', text: `Likewise! I saw you're into philosophy - that's so cool. What got you interested in it?` }
+    { id: '2', from: 'user', text: `Hi ${match.name}! Likewise!` },
+    { id: '3', from: 'match', text: `How has your day been?` },
   ]);
-
   const flatListRef = useRef(null);
-  const keyboardVerticalOffset = Platform.OS === 'ios' ? 85 : 0;
 
-  // Initialize AI assistance and compatibility analysis
+  // Mock current user for compatibility analysis
+  const currentUser = {
+    id: 'user123',
+    name: 'You',
+    personalityType: 'INFJ-A',
+    interests: ['Reading', 'Music', 'Coffee'],
+    virtueProfile: {
+      getTopVirtues: () => [
+        { virtue: 'WISDOM', customTerm: null },
+        { virtue: 'AUTHENTICITY', customTerm: null }
+      ]
+    }
+  };
+
+  // Initialize compatibility engine and AI orchestrator
+  const compatibilityEngine = new CompatibilityEngine();
+  const [soulAI, setSoulAI] = useState(null);
+
   useEffect(() => {
-    initializeAIAssistance();
-    const keyboardDidShowListener = Keyboard.addListener('keyboardDidShow', () => setKeyboardVisible(true));
-    const keyboardDidHideListener = Keyboard.addListener('keyboardDidHide', () => setKeyboardVisible(false));
+    // Initialize Soul AI for conversation assistance
+    const orchestrator = createSoulAIOrchestrator(currentUser, {});
+    setSoulAI(orchestrator);
+
+    // Calculate compatibility with this match
+    const compatibility = compatibilityEngine.calculateCompatibility(currentUser, match);
+    setCompatibilityData(compatibility);
+  }, []);
+
+  useEffect(() => {
+    const keyboardDidShowListener = Keyboard.addListener('keyboardDidShow', () => {
+      setKeyboardVisible(true);
+    });
+    const keyboardDidHideListener = Keyboard.addListener('keyboardDidHide', () => {
+      setKeyboardVisible(false);
+    });
 
     return () => {
       keyboardDidShowListener?.remove();
@@ -70,119 +98,141 @@ export default function MatchChatScreen({ navigation, route }) {
     };
   }, []);
 
-  const initializeAIAssistance = async () => {
-    try {
-      // Create mock user data for compatibility analysis
-      const currentUser = {
-        id: 'user123',
-        name: 'You',
-        personalityType: 'INFJ-A', // Mock user type
-        virtueProfile: {
-          getTopVirtues: () => [
-            { virtue: 'WISDOM', customTerm: 'depth' },
-            { virtue: 'HUMANITY', customTerm: 'authenticity' }
-          ]
-        }
-      };
-
-      // Initialize compatibility engine if available
-      try {
-        const engine = new CompatibilityEngine({});
-        const compatibility = engine.calculateCompatibility(currentUser, match);
-        setCompatibilityData(compatibility);
-      } catch (error) {
-        console.log('Compatibility engine not available');
-      }
-
-      // Initialize Soul AI orchestrator for conversation assistance
-      try {
-        const orchestrator = createSoulAIOrchestrator(currentUser, {});
-        
-        // Generate initial conversation suggestions
-        const suggestions = [
-          "What's been the highlight of your week?",
-          "I'm curious about your travel experiences - any favorites?",
-          "What kind of art speaks to you most?",
-          "How do you usually approach deep conversations?"
-        ];
-        setAiSuggestions(suggestions);
-      } catch (error) {
-        console.log('Soul AI orchestrator not available');
-      }
-    } catch (error) {
-      console.error('Error initializing AI assistance:', error);
-    }
+  // Navigate to match profile when name is tapped
+  const navigateToMatchProfile = () => {
+    navigation.navigate('MatchProfile', { match });
   };
 
   const handleSend = () => {
     if (!input.trim()) return;
-
+    
     const newMessage = {
       id: Date.now().toString(),
       from: 'user',
-      text: input.trim(),
-      timestamp: new Date()
+      text: input,
     };
-
-    setMessages(prev => [...prev, newMessage]);
+    
+    LayoutAnimation.configureNext(LayoutAnimation.Presets.easeInEaseOut);
+    setMessages([...messages, newMessage]);
     setInput('');
-    setShowAIAssist(false);
-
-    // Simulate match response (in real app, this would be actual message sending)
+    setShowAIAssist(false); // Hide AI assist after sending
+    
+    Keyboard.dismiss();
+    setKeyboardVisible(false);
+    
     setTimeout(() => {
       const responses = [
-        "That's really interesting! Tell me more about that.",
-        "I love that perspective! It reminds me of something similar I experienced.",
-        "Wow, I hadn't thought about it that way before.",
-        "That's exactly what I was hoping to hear about!"
+        "That's awesome! 😊",
+        "I totally agree!",
+        "Tell me more about that!",
+        "Sounds great! ✨",
+        "I'd love to hear more!",
+        "That's so interesting!",
+        "I can relate to that!",
+        "What a great perspective!"
       ];
+      const randomResponse = responses[Math.floor(Math.random() * responses.length)];
       
-      const response = {
+      const matchResponse = {
         id: (Date.now() + 1).toString(),
         from: 'match',
-        text: responses[Math.floor(Math.random() * responses.length)],
-        timestamp: new Date()
+        text: randomResponse,
       };
-      
-      setMessages(prev => [...prev, response]);
-    }, 1500);
+      setMessages(prev => [...prev, matchResponse]);
+    }, 2000);
   };
 
-  const handleSoulAssist = () => {
-    setShowAIAssist(!showAIAssist);
-    if (!showAIAssist) {
-      // Refresh AI suggestions when opening
-      const newSuggestions = [
-        "What's something you're passionate about lately?",
-        "If you could have dinner with anyone, who would it be?",
-        "What's a book or movie that changed your perspective?",
-        "What does a perfect weekend look like for you?"
-      ];
-      setAiSuggestions(newSuggestions);
+  const handleSoulAssist = async () => {
+    try {
+      setShowAIAssist(true);
+      
+      // Generate conversation suggestions based on compatibility and conversation context
+      const contextualSuggestions = await generateAIAssistance();
+      setAiSuggestions(contextualSuggestions);
+
+      // If input is empty, suggest a conversation starter
+      if (!input.trim()) {
+        const suggestion = contextualSuggestions[0] || `Hey ${match.name}, what's been the highlight of your week?`;
+        setInput(suggestion);
+      } else {
+        // Enhance existing message
+        const enhancedMessage = await enhanceMessageWithAI(input);
+        setInput(enhancedMessage);
+      }
+    } catch (error) {
+      console.error('AI assist error:', error);
+      Alert.alert('AI Assist', 'Having trouble generating suggestions. Try again!');
     }
   };
 
-  const handleSuggestionPress = (suggestion) => {
-    setInput(suggestion);
-    setShowAIAssist(false);
+  const generateAIAssistance = async () => {
+    const suggestions = [];
+
+    // Add compatibility-based suggestions
+    if (compatibilityData) {
+      const strongFactors = compatibilityData.factors.filter(f => f.isPositive && f.weightedScore > 15);
+      
+      if (strongFactors.length > 0) {
+        const topFactor = strongFactors[0];
+        if (topFactor.factor.includes('Worldview')) {
+          suggestions.push(`Since you both ${topFactor.user1Trait === topFactor.user2Trait ? 'see the world similarly' : 'have different perspectives'}, you could ask about their thoughts on ${match.interests[0]?.toLowerCase()}.`);
+        }
+        if (topFactor.factor.includes('Values')) {
+          suggestions.push("Your shared values suggest they'd appreciate a meaningful question about what drives them.");
+        }
+      }
+    }
+
+    // Add personality-specific starters
+    const personalityStarters = getPersonalitySpecificStarters(match.personalityType);
+    suggestions.push(...personalityStarters.slice(0, 2));
+
+    // Add interest-based suggestions
+    if (match.interests && match.interests.length > 0) {
+      suggestions.push(`Ask about their passion for ${match.interests[0]} - it seems really important to them.`);
+    }
+
+    // Add conversation flow suggestions based on recent messages
+    const recentMessages = messages.slice(-3);
+    if (recentMessages.some(m => m.text.includes('day'))) {
+      suggestions.push("They asked about your day - maybe share something interesting that happened or ask about theirs!");
+    }
+
+    return suggestions.slice(0, 4); // Return top 4 suggestions
+  };
+
+  const getPersonalitySpecificStarters = (personalityType) => {
+    const starters = {
+      'ENFP': ["What's something that's been inspiring you lately?", "If you could learn any skill instantly, what would it be?"],
+      'INFJ': ["What's a book or idea that changed how you see the world?", "What do you think makes a conversation truly meaningful?"],
+      'ESFP': ["What's the most fun thing you've done recently?", "What always makes you smile no matter what?"],
+      'INTJ': ["What's a project you're really excited about?", "What's something you've been thinking about a lot lately?"],
+      'ISFP': ["What's something beautiful you've noticed recently?", "What's a place that makes you feel most yourself?"],
+      'ENTP': ["What's an idea you can't stop thinking about?", "What's the most interesting debate you've had recently?"],
+      'ISFJ': ["What's something that's been bringing you joy lately?", "How do you like to spend your ideal weekend?"],
+      'ESTJ': ["What's a goal you're working towards?", "What's something you're really proud of accomplishing?"],
+    };
+    
+    return starters[personalityType?.split('-')[0]] || [
+      "What's been the best part of your week?",
+      "What's something you're passionate about?"
+    ];
+  };
+
+  const enhanceMessageWithAI = async (message) => {
+    // Simple message enhancement - in real app this would use actual AI
+    if (message.length < 20) {
+      return message + " What are your thoughts on that?";
+    }
+    return message;
   };
 
   const renderMessage = ({ item }) => {
     const isUser = item.from === 'user';
-    
     return (
-      <View style={[
-        styles.messageContainer,
-        isUser ? styles.userMessageContainer : styles.matchMessageContainer
-      ]}>
-        <View style={[
-          styles.messageBubble,
-          isUser ? styles.userBubble : styles.matchBubble
-        ]}>
-          <Text style={[
-            styles.messageText,
-            isUser ? styles.userText : styles.matchText
-          ]}>
+      <View style={[styles.messageContainer, isUser ? styles.userMessageContainer : styles.matchMessageContainer]}>
+        <View style={[styles.messageBubble, isUser ? styles.userBubble : styles.matchBubble]}>
+          <Text style={[styles.messageText, isUser ? styles.userText : styles.matchText]}>
             {item.text}
           </Text>
         </View>
@@ -190,259 +240,203 @@ export default function MatchChatScreen({ navigation, route }) {
     );
   };
 
-  const renderAISuggestions = () => {
-    if (!showAIAssist) return null;
-
-    return (
-      <View style={styles.aiSuggestionsOverlay}>
-        <View style={styles.aiSuggestionsContainer}>
-          <View style={styles.aiSuggestionsHeader}>
-            <Text style={styles.aiSuggestionsTitle}>Soul AI Suggestions</Text>
-            {compatibilityData && (
-              <Text style={styles.compatibilityHint}>
-                💜 {compatibilityData.rating} compatibility
-              </Text>
-            )}
-          </View>
+  return (
+    <SafeAreaView style={styles.container}>
+      {/* Header */}
+      <View style={styles.headerShadow}>
+        <LinearGradient
+          colors={['#F8FBFF', '#F8FBFF']}
+          start={{ x: 0, y: 0 }}
+          end={{ x: 1, y: 0 }}
+          style={[styles.header, { paddingTop: insets.top + 10 }]}
+        >
+          <TouchableOpacity 
+            onPress={() => navigation.goBack()} 
+            style={{ padding: 4 }}
+          >
+            <Ionicons name="chevron-back" size={28} color="#4A2C6D" />
+          </TouchableOpacity>
           
-          <View style={styles.suggestionsGrid}>
+          {/* Clickable match name to view profile */}
+          <TouchableOpacity 
+            onPress={navigateToMatchProfile}
+            style={{ flex: 1, marginHorizontal: 16 }}
+          >
+            <Text style={{
+              fontSize: 31,
+              fontWeight: 'bold',
+              color: '#4A2C6D',
+              letterSpacing: 1,
+              textAlign: 'center',
+            }}>{match.name}</Text>
+            <Text style={{
+              fontSize: 12,
+              color: '#7f8c8d',
+              textAlign: 'center',
+              marginTop: 2
+            }}>Tap to view profile</Text>
+            {/* Show compatibility score in header */}
+            {compatibilityData && (
+              <Text style={{
+                fontSize: 11,
+                color: '#27ae60',
+                textAlign: 'center',
+                fontWeight: '600',
+                marginTop: 1
+              }}>{compatibilityData.score}% Compatible</Text>
+            )}
+          </TouchableOpacity>
+          
+          <TouchableOpacity 
+            style={{ padding: 4 }}
+            onPress={() => setShowAIAssist(!showAIAssist)}
+          >
+            <Ionicons 
+              name={showAIAssist ? "sparkles" : "ellipsis-vertical"} 
+              size={24} 
+              color={showAIAssist ? "#9b59b6" : "#4A2C6D"} 
+            />
+          </TouchableOpacity>
+        </LinearGradient>
+      </View>
+
+      <KeyboardAvoidingView
+        style={{ flex: 1 }}
+        behavior={Platform.OS === 'ios' ? 'padding' : 'height'}
+        keyboardVerticalOffset={Platform.OS === 'ios' ? insets.top : 0}
+      >
+        {/* Messages */}
+        <FlatList
+          ref={flatListRef}
+          data={messages}
+          renderItem={renderMessage}
+          keyExtractor={item => item.id}
+          style={styles.messagesList}
+          contentContainerStyle={styles.messagesContent}
+          onContentSizeChange={() => flatListRef.current?.scrollToEnd({ animated: true })}
+          onLayout={() => flatListRef.current?.scrollToEnd({ animated: true })}
+        />
+
+        {/* AI Assistance Panel */}
+        {showAIAssist && (
+          <View style={styles.aiAssistPanel}>
+            <Text style={styles.aiAssistTitle}>💫 Soul AI Suggestions</Text>
             {aiSuggestions.map((suggestion, index) => (
-              <TouchableOpacity
-                key={index}
-                style={styles.suggestionButton}
-                onPress={() => handleSuggestionPress(suggestion)}
+              <TouchableOpacity 
+                key={index} 
+                style={styles.suggestionItem}
+                onPress={() => {
+                  setInput(suggestion);
+                  setShowAIAssist(false);
+                }}
               >
                 <Text style={styles.suggestionText}>{suggestion}</Text>
               </TouchableOpacity>
             ))}
-          </View>
-          
-          <TouchableOpacity 
-            style={styles.closeSuggestionsButton}
-            onPress={() => setShowAIAssist(false)}
-          >
-            <Text style={styles.closeSuggestionsText}>Close</Text>
-          </TouchableOpacity>
-        </View>
-      </View>
-    );
-  };
-
-  return (
-    <ImageBackground 
-      source={{ uri: match.photos[0] }} 
-      style={styles.container}
-      blurRadius={20}
-    >
-      <LinearGradient
-        colors={['rgba(102, 126, 234, 0.9)', 'rgba(118, 75, 162, 0.9)']}
-        style={styles.overlay}
-      >
-        <SafeAreaView style={styles.safeArea}>
-          {/* Header */}
-          <View style={[styles.header, { paddingTop: insets.top }]}>
             <TouchableOpacity 
-              style={styles.backButton}
-              onPress={() => navigation.goBack()}
+              style={styles.generateMoreButton}
+              onPress={handleSoulAssist}
             >
-              <Ionicons name="chevron-back" size={28} color="white" />
-            </TouchableOpacity>
-            
-            <TouchableOpacity 
-              style={styles.matchInfo}
-              onPress={() => navigation.navigate('MatchProfile', { match })}
-            >
-              <Text style={styles.matchName}>{match.name}</Text>
-              <Text style={styles.matchDetails}>{match.age} • {match.location}</Text>
-            </TouchableOpacity>
-
-            <TouchableOpacity style={styles.headerButton}>
-              <Ionicons name="videocam" size={24} color="white" />
+              <Text style={styles.generateMoreText}>Generate More Ideas</Text>
             </TouchableOpacity>
           </View>
+        )}
 
-          <KeyboardAvoidingView
-            style={{ flex: 1 }}
-            behavior={Platform.OS === 'ios' ? 'padding' : 'height'}
-            keyboardVerticalOffset={keyboardVerticalOffset}
-          >
-            <FlatList
-              ref={flatListRef}
-              data={messages}
-              renderItem={renderMessage}
-              keyExtractor={item => item.id}
-              contentContainerStyle={{
-                flexGrow: 1,
-                padding: 16,
-                paddingTop: 8,
-                paddingBottom: 8,
-              }}
-              style={{ backgroundColor: 'transparent' }}
-              showsVerticalScrollIndicator={false}
-              onLayout={() => flatListRef.current?.scrollToEnd({ animated: true })}
-              keyboardShouldPersistTaps="handled"
+        {/* Input Area */}
+        <View style={[styles.inputContainer, keyboardVisible && styles.inputContainerKeyboard]}>
+          <View style={styles.inputRow}>
+            <TouchableOpacity 
+              style={styles.aiButton}
+              onPress={handleSoulAssist}
+            >
+              <Ionicons name="sparkles" size={20} color="#9b59b6" />
+            </TouchableOpacity>
+            <TextInput
+              style={styles.textInput}
+              value={input}
+              onChangeText={setInput}
+              placeholder={`Message ${match.name}...`}
+              placeholderTextColor="#999"
+              multiline
+              maxLength={500}
             />
-
-            {/* AI Suggestions Overlay */}
-            {renderAISuggestions()}
-
-            {/* Input container with enhanced Soul AI button */}
-            <View style={{
-              padding: 12,
-              alignItems: 'center',
-            }}>
-              <View style={{
-                flexDirection: 'row',
-                alignItems: 'center',
-                backgroundColor: 'rgba(255, 255, 255, 0.95)',
-                borderRadius: 30,
-                paddingHorizontal: 4,
-                paddingVertical: 4,
-                width: '96%',
-                shadowColor: '#000',
-                shadowOffset: { width: 0, height: 2 },
-                shadowOpacity: 0.2,
-                shadowRadius: 6,
-                elevation: 5,
-              }}>
-                <TouchableOpacity
-                  onPress={handleSoulAssist}
-                  style={{
-                    backgroundColor: showAIAssist ? '#9b59b6' : 'rgba(248, 251, 255, 0.9)',
-                    borderRadius: 20,
-                    padding: 8,
-                    marginRight: 8,
-                    alignItems: 'center',
-                    justifyContent: 'center',
-                  }}
-                >
-                  <Ionicons 
-                    name="sparkles" 
-                    size={22} 
-                    color={showAIAssist ? 'white' : '#4A2C6D'} 
-                  />
-                </TouchableOpacity>
-                
-                <TextInput
-                  style={{
-                    flex: 1,
-                    minHeight: 40,
-                    maxHeight: 120,
-                    paddingVertical: 10,
-                    paddingHorizontal: 16,
-                    backgroundColor: 'transparent',
-                    borderRadius: 0,
-                    fontSize: 16,
-                    color: '#4A2C6D',
-                    borderWidth: 0,
-                    marginRight: 8,
-                    includeFontPadding: false,
-                    textAlignVertical: 'center',
-                  }}
-                  value={input}
-                  onChangeText={setInput}
-                  placeholder={`Message ${match.name}...`}
-                  placeholderTextColor="#4A2C6D"
-                  multiline
-                  returnKeyType="send"
-                  onSubmitEditing={handleSend}
-                  blurOnSubmit={false}
-                />
-                
-                <TouchableOpacity 
-                  style={{
-                    backgroundColor: !input.trim() ? '#90caf9' : '#5A9BD4',
-                    borderRadius: 22,
-                    width: 44,
-                    height: 44,
-                    justifyContent: 'center',
-                    alignItems: 'center',
-                    marginRight: 0,
-                  }}
-                  onPress={handleSend}
-                  disabled={!input.trim()}
-                >
-                  <Ionicons name="send" size={20} color="white" />
-                </TouchableOpacity>
-              </View>
-            </View>
-          </KeyboardAvoidingView>
-        </SafeAreaView>
-      </LinearGradient>
-    </ImageBackground>
+            <TouchableOpacity 
+              style={[styles.sendButton, !input.trim() && styles.sendButtonDisabled]}
+              onPress={handleSend}
+              disabled={!input.trim()}
+            >
+              <Ionicons name="send" size={20} color={input.trim() ? "#FFFFFF" : "#ccc"} />
+            </TouchableOpacity>
+          </View>
+        </View>
+      </KeyboardAvoidingView>
+    </SafeAreaView>
   );
 }
 
 const styles = StyleSheet.create({
   container: {
     flex: 1,
+    backgroundColor: '#fff',
   },
-  overlay: {
-    flex: 1,
-  },
-  safeArea: {
-    flex: 1,
+  headerShadow: {
+    shadowColor: '#000',
+    shadowOffset: { width: 0, height: 2 },
+    shadowOpacity: 0.08,
+    shadowRadius: 4,
+    elevation: 2,
+    backgroundColor: '#fff',
+    zIndex: 10,
   },
   header: {
     flexDirection: 'row',
     alignItems: 'center',
-    paddingHorizontal: 16,
+    backgroundColor: '#fff',
     paddingBottom: 12,
+    paddingHorizontal: 16,
     borderBottomWidth: 1,
-    borderBottomColor: 'rgba(255, 255, 255, 0.2)',
+    borderBottomColor: '#eee',
   },
-  backButton: {
-    padding: 4,
-  },
-  matchInfo: {
+  messagesList: {
     flex: 1,
-    alignItems: 'center',
-    marginHorizontal: 16,
+    backgroundColor: '#f8f9fa',
   },
-  matchName: {
-    fontSize: 18,
-    fontWeight: 'bold',
-    color: 'white',
-  },
-  matchDetails: {
-    fontSize: 14,
-    color: 'rgba(255, 255, 255, 0.8)',
-    marginTop: 2,
-  },
-  headerButton: {
-    padding: 4,
+  messagesContent: {
+    paddingHorizontal: 16,
+    paddingVertical: 16,
+    paddingBottom: 20,
   },
   messageContainer: {
     marginBottom: 12,
+    maxWidth: '80%',
   },
   userMessageContainer: {
-    alignItems: 'flex-end',
+    alignSelf: 'flex-end',
   },
   matchMessageContainer: {
-    alignItems: 'flex-start',
+    alignSelf: 'flex-start',
   },
   messageBubble: {
-    maxWidth: '80%',
     paddingHorizontal: 16,
     paddingVertical: 12,
     borderRadius: 20,
-  },
-  userBubble: {
-    backgroundColor: '#9b59b6',
-    borderBottomRightRadius: 6,
-  },
-  matchBubble: {
-    backgroundColor: 'rgba(255, 255, 255, 0.95)',
-    borderBottomLeftRadius: 6,
     shadowColor: '#000',
     shadowOffset: { width: 0, height: 1 },
     shadowOpacity: 0.1,
     shadowRadius: 2,
     elevation: 2,
   },
+  userBubble: {
+    backgroundColor: '#0077B6',
+    borderBottomRightRadius: 6,
+  },
+  matchBubble: {
+    backgroundColor: 'white',
+    borderBottomLeftRadius: 6,
+  },
   messageText: {
     fontSize: 16,
-    lineHeight: 20,
+    lineHeight: 22,
   },
   userText: {
     color: 'white',
@@ -450,63 +444,93 @@ const styles = StyleSheet.create({
   matchText: {
     color: '#2c3e50',
   },
-  
-  // AI Suggestions Overlay
-  aiSuggestionsOverlay: {
-    position: 'absolute',
-    bottom: 80,
-    left: 16,
-    right: 16,
-    backgroundColor: 'rgba(0, 0, 0, 0.5)',
-    borderRadius: 16,
-    padding: 16,
-  },
-  aiSuggestionsContainer: {
+  aiAssistPanel: {
     backgroundColor: 'white',
-    borderRadius: 12,
+    borderTopWidth: 1,
+    borderTopColor: '#e1e8ed',
     padding: 16,
+    maxHeight: 200,
   },
-  aiSuggestionsHeader: {
-    flexDirection: 'row',
-    justifyContent: 'space-between',
-    alignItems: 'center',
-    marginBottom: 12,
-  },
-  aiSuggestionsTitle: {
+  aiAssistTitle: {
     fontSize: 16,
     fontWeight: 'bold',
     color: '#9b59b6',
+    marginBottom: 12,
   },
-  compatibilityHint: {
-    fontSize: 12,
-    color: '#7f8c8d',
-    fontWeight: '500',
-  },
-  suggestionsGrid: {
-    gap: 8,
-  },
-  suggestionButton: {
+  suggestionItem: {
     backgroundColor: '#f8f9fa',
     padding: 12,
     borderRadius: 8,
+    marginBottom: 8,
     borderLeftWidth: 3,
     borderLeftColor: '#9b59b6',
   },
   suggestionText: {
     fontSize: 14,
     color: '#2c3e50',
-    fontStyle: 'italic',
+    lineHeight: 20,
   },
-  closeSuggestionsButton: {
-    backgroundColor: '#ecf0f1',
-    padding: 10,
-    borderRadius: 8,
-    alignItems: 'center',
-    marginTop: 12,
+  generateMoreButton: {
+    alignSelf: 'center',
+    paddingVertical: 8,
+    paddingHorizontal: 16,
   },
-  closeSuggestionsText: {
+  generateMoreText: {
     fontSize: 14,
-    color: '#7f8c8d',
+    color: '#9b59b6',
     fontWeight: '600',
+  },
+  inputContainer: {
+    backgroundColor: 'white',
+    borderTopWidth: 1,
+    borderTopColor: '#e1e8ed',
+    paddingHorizontal: 16,
+    paddingVertical: 12,
+  },
+  inputContainerKeyboard: {
+    paddingBottom: 8,
+  },
+  inputRow: {
+    flexDirection: 'row',
+    alignItems: 'flex-end',
+    backgroundColor: '#f8f9fa',
+    borderRadius: 25,
+    paddingHorizontal: 4,
+    paddingVertical: 4,
+  },
+  aiButton: {
+    width: 36,
+    height: 36,
+    borderRadius: 18,
+    backgroundColor: 'white',
+    alignItems: 'center',
+    justifyContent: 'center',
+    marginRight: 8,
+    shadowColor: '#000',
+    shadowOffset: { width: 0, height: 1 },
+    shadowOpacity: 0.1,
+    shadowRadius: 2,
+    elevation: 2,
+  },
+  textInput: {
+    flex: 1,
+    fontSize: 16,
+    color: '#2c3e50',
+    paddingHorizontal: 12,
+    paddingVertical: 8,
+    maxHeight: 100,
+    minHeight: 36,
+  },
+  sendButton: {
+    width: 36,
+    height: 36,
+    borderRadius: 18,
+    backgroundColor: '#0077B6',
+    alignItems: 'center',
+    justifyContent: 'center',
+    marginLeft: 8,
+  },
+  sendButtonDisabled: {
+    backgroundColor: '#e1e8ed',
   },
 });

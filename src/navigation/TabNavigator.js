@@ -1,16 +1,20 @@
+// src/navigation/TabNavigator.js
 import React from 'react';
 import { createBottomTabNavigator } from '@react-navigation/bottom-tabs';
 import { createNativeStackNavigator } from '@react-navigation/native-stack';
-import SoulChatScreen from '../screens/soulchat/SoulChatScreen';
-import ListScreen from '../screens/list/ListScreen';
+
+// Import screens based on your current structure
+import SoulChatScreen from '../screens/chat/SoulChatScreen';
+import ListScreen from '../screens/matches/ListScreen';
 import ProfileScreen from '../screens/profile/ProfileScreen';
-import MatchChatScreen from '../screens/matches/MatchChatScreen';
+import MatchChatScreen from '../screens/chat/MatchChatScreen';
 import MatchProfileScreen from '../screens/matches/MatchProfileScreen';
+import DiscoveryScreen from '../screens/discovery/DiscoveryScreen';
 
 const Tab = createBottomTabNavigator();
 const Stack = createNativeStackNavigator();
 
-// Stack navigator for the Matches flow (ListScreen + MatchChatScreen + MatchProfileScreen)
+// Stack navigator for the Matches flow
 function MatchesStack() {
   return (
     <Stack.Navigator screenOptions={{ headerShown: false }}>
@@ -25,15 +29,19 @@ function MatchesStack() {
 function TabNavigator() {
   return (
     <Tab.Navigator
-      initialRouteName="SoulChatScreen"
+      initialRouteName="DiscoveryScreen"
       screenOptions={{
         headerShown: false,
-        tabBarStyle: { display: 'none' }, // Hide default tab bar since we're using custom toolbar
+        tabBarStyle: { display: 'none' },
       }}
     >
       <Tab.Screen 
         name="SoulChatScreen" 
         component={SoulChatScreen}
+      />
+      <Tab.Screen 
+        name="DiscoveryScreen" 
+        component={DiscoveryScreen}
       />
       <Tab.Screen 
         name="MatchesStack" 
@@ -47,5 +55,4 @@ function TabNavigator() {
   );
 }
 
-// Export the TabNavigator directly (no PersonalityAssessment)
 export default TabNavigator;

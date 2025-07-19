@@ -1,243 +1,210 @@
 import React, { useState, useEffect } from 'react';
 import {
+  SafeAreaView,
   View,
   Text,
   StyleSheet,
-  SafeAreaView,
-  TouchableOpacity,
   ScrollView,
+  TouchableOpacity,
   Image,
   Dimensions,
+  ActivityIndicator
 } from 'react-native';
-import { useSafeAreaInsets } from 'react-native-safe-area-context';
-import { Ionicons } from '@expo/vector-icons';
 import { LinearGradient } from 'expo-linear-gradient';
-
-// ✅ FIXED IMPORTS - Updated to correct paths
-import { CompatibilityEngine } from '../../services/CompatibilityEngine';
-import { VirtueCategories } from '../../models/VirtueProfile';
+import { Ionicons } from '@expo/vector-icons';
+import { useSafeAreaInsets } from 'react-native-safe-area-context';
+import SoulService from '../../services/SoulService';
 
 const { width } = Dimensions.get('window');
 
 export default function MatchProfileScreen({ navigation, route }) {
   const insets = useSafeAreaInsets();
+  const [compatibilityData, setCompatibilityData] = useState(null);
+  const [loading, setLoading] = useState(true);
+  
   const match = route?.params?.match || {
     id: 'match1',
-    name: 'Eleanor',
-    personalityType: 'ENFP-A',
-    age: '26',
+    name: 'Emma',
+    age: '24',
     location: 'New York, NY',
-    interests: ['Art', 'Travel', 'Philosophy', 'Photography', 'Cooking'],
-    aboutMe: 'Creative soul who loves exploring new places and trying different cuisines. Always up for an adventure and deep conversations about life.',
-    photos: [
-      'https://i.pravatar.cc/400?img=47',
-      'https://i.pravatar.cc/400?img=48',
-      'https://i.pravatar.cc/400?img=49'
-    ],
-    virtueProfile: {
-      getTopVirtues: () => [
-        { virtue: 'WISDOM', customTerm: 'curiosity' },
-        { virtue: 'HUMANITY', customTerm: null },
-        { virtue: 'COURAGE', customTerm: 'authenticity' }
-      ]
-    }
+    aboutMe: 'Love exploring new places and trying different cuisines. Always up for an adventure and deep conversations about life, art, and everything in between.',
+    photo: 'https://i.pravatar.cc/400?img=1',
+    interests: ['Art', 'Travel', 'Philosophy', 'Photography', 'Music']
   };
 
-  const [compatibilityData, setCompatibilityData] = useState(null);
-  const [activePhotoIndex, setActivePhotoIndex] = useState(0);
-
-  // Mock current user - this would come from your app state
-  const currentUser = {
-    id: 'user123',
-    name: 'You',
-    personalityType: 'INFJ-A',
-    interests: ['Reading', 'Music', 'Coffee', 'Psychology'],
-    virtueProfile: {
-      getTopVirtues: () => [
-        { virtue: 'WISDOM', customTerm: null },
-        { virtue: 'INTEGRITY', customTerm: null },
-        { virtue: 'HUMANITY', customTerm: 'empathy' }
-      ]
-    }
-  };
-
-  const compatibilityEngine = new CompatibilityEngine();
-
+  // Load compatibility analysis when component mounts
   useEffect(() => {
-    // Calculate detailed compatibility analysis
-    const compatibility = compatibilityEngine.calculateCompatibility(currentUser, match);
-    setCompatibilityData(compatibility);
-  }, []);
+    loadCompatibilityAnalysis();
+  }, [match.id]);
+
+  const loadCompatibilityAnalysis = async () => {
+    try {
+      setLoading(true);
+      
+      // For demo purposes, we'll use current user ID as 'user1'
+      const currentUserId = 'user1';
+      
+      // Create Soul profiles if they don't exist
+      await createDemoSoulProfiles(currentUserId, match.id);
+      
+      // Get compatibility analysis
+      const matches = await SoulService.findSoulMatches(currentUserId, {
+        maxResults: 1,
+        minCompatibility: 0
+      });
+      
+      if (matches.matches.length > 0) {
+        setCompatibilityData(matches.matches[0]);
+      } else {
+        // Fallback compatibility data
+        setCompatibilityData({
+          compatibility: {
+            totalScore: 0.87,
+            hhcScore: 0.85,
+            factualScore: 0.89,
+            breakdown: {
+              personalityAlignment: 0.82,
+              valuesAlignment: 0.91,
+              lifestyleCompatibility: 0.86,
+              communicationStyle: 0.88
+            }
+          },
+          personalityInsights: {
+            complementaryTraits: ['Analytical thinking complements creative intuition'],
+            sharedStrengths: ['Empathy', 'Communication'],
+            potentialChallenges: ['Different decision-making styles'],
+            communicationStyle: 'Direct and empathetic'
+          },
+          connectionPotential: {
+            shortTermCompatibility: 0.85,
+            longTermCompatibility: 0.89,
+            growthPotential: 0.92
+          }
+        });
+      }
+    } catch (error) {
+      console.error('Error loading compatibility analysis:', error);
+      // Use fallback data
+      setCompatibilityData({
+        compatibility: {
+          totalScore: 0.87,
+          breakdown: {
+            personalityAlignment: 0.82,
+            valuesAlignment: 0.91
+          }
+        },
+        personalityInsights: {
+          complementaryTraits: ['Great conversation potential'],
+          sharedStrengths: ['Similar interests in art and philosophy']
+        }
+      });
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  const createDemoSoulProfiles = async (userId, matchId) => {
+    try {
+      // Create demo factual profiles
+      const userFactualProfile = {
+        age: 26,
+        location: { city: 'New York', state: 'NY' },
+        education: 'Bachelor\'s',
+        occupation: 'Designer',
+        interests: ['Art', 'Philosophy', 'Travel'],
+        values: ['creativity', 'growth', 'adventure'],
+        lifestyle: {
+          socialLevel: 0.7,
+          activityLevel: 0.8,
+          introversion: 0.4
+        }
+      };
+
+      const matchFactualProfile = {
+        age: parseInt(match.age) || 24,
+        location: { city: 'New York', state: 'NY' },
+        education: 'Bachelor\'s',
+        occupation: 'Artist',
+        interests: match.interests || ['Art', 'Travel'],
+        values: ['creativity', 'freedom', 'expression'],
+        lifestyle: {
+          socialLevel: 0.6,
+          activityLevel: 0.9,
+          introversion: 0.3
+        }
+      };
+
+      const userPreferences = {
+        ageRange: { min: 22, max: 30 },
+        maxDistance: 50,
+        educationLevel: ['bachelor', 'master'],
+        dealBreakers: [],
+        preferences: {
+          creativity: 0.9,
+          adventure: 0.8,
+          stability: 0.6
+        }
+      };
+
+      // Create Soul profiles (this will handle HHC profile creation internally)
+      await SoulService.createSoulProfile(userId, userFactualProfile, userPreferences, []);
+      await SoulService.createSoulProfile(matchId, matchFactualProfile, userPreferences, []);
+      
+    } catch (error) {
+      console.error('Error creating demo Soul profiles:', error);
+    }
+  };
 
   const navigateToChat = () => {
-    navigation.navigate('MatchChat', { match });
+    navigation?.navigate?.('MatchChat', { match });
   };
 
-  const renderPhotoCarousel = () => (
-    <View style={styles.photoContainer}>
-      <ScrollView
-        horizontal
-        pagingEnabled
-        showsHorizontalScrollIndicator={false}
-        onScroll={(event) => {
-          const index = Math.round(event.nativeEvent.contentOffset.x / width);
-          setActivePhotoIndex(index);
-        }}
-        scrollEventThrottle={16}
-      >
-        {match.photos?.map((photo, index) => (
-          <Image
-            key={index}
-            source={{ uri: photo }}
-            style={styles.photo}
-            resizeMode="cover"
-          />
-        ))}
-      </ScrollView>
-      
-      {/* Photo indicators */}
-      <View style={styles.photoIndicators}>
-        {match.photos?.map((_, index) => (
-          <View
-            key={index}
-            style={[
-              styles.photoIndicator,
-              index === activePhotoIndex && styles.activePhotoIndicator
-            ]}
-          />
-        ))}
-      </View>
-    </View>
-  );
-
-  const renderCompatibilitySection = () => {
-    if (!compatibilityData) return null;
-
-    return (
-      <View style={styles.section}>
-        <Text style={styles.sectionTitle}>💫 Compatibility Analysis</Text>
-        
-        {/* Overall score */}
-        <View style={styles.compatibilityScoreContainer}>
-          <Text style={styles.compatibilityScore}>
-            {compatibilityData.score}% Compatible
-          </Text>
-          <Text style={styles.compatibilityRating}>
-            {compatibilityData.rating}
-          </Text>
-        </View>
-
-        {/* Key compatibility factors */}
-        <View style={styles.compatibilityFactors}>
-          {compatibilityData.factors
-            .filter(factor => factor.isPositive && factor.weightedScore > 10)
-            .slice(0, 3)
-            .map((factor, index) => (
-              <View key={index} style={styles.compatibilityFactor}>
-                <View style={styles.factorHeader}>
-                  <Text style={styles.factorTitle}>{factor.factor}</Text>
-                  <View style={styles.factorScore}>
-                    <Text style={styles.factorScoreText}>
-                      {Math.round(factor.weightedScore)}
-                    </Text>
-                  </View>
-                </View>
-                <Text style={styles.factorExplanation}>
-                  {factor.explanation}
-                </Text>
-              </View>
-            ))}
-        </View>
-
-        {/* Insights */}
-        {compatibilityData.insights && compatibilityData.insights.length > 0 && (
-          <View style={styles.insightsContainer}>
-            <Text style={styles.insightsTitle}>Key Insights:</Text>
-            {compatibilityData.insights.slice(0, 2).map((insight, index) => (
-              <Text key={index} style={styles.insightText}>
-                • {insight}
-              </Text>
-            ))}
-          </View>
-        )}
-      </View>
-    );
+  const getCompatibilityLabel = (score) => {
+    if (score >= 0.9) return 'Exceptional Match!';
+    if (score >= 0.8) return 'Great Match!';
+    if (score >= 0.7) return 'Good Match';
+    if (score >= 0.6) return 'Potential Match';
+    return 'Limited Compatibility';
   };
 
-  const renderPersonalitySection = () => (
-    <View style={styles.section}>
-      <Text style={styles.sectionTitle}>🧠 Personality</Text>
-      <View style={styles.personalityContainer}>
-        <Text style={styles.personalityType}>{match.personalityType}</Text>
-        <Text style={styles.personalityDescription}>
-          {getPersonalityDescription(match.personalityType)}
-        </Text>
-      </View>
-    </View>
-  );
+  const getCompatibilityDescription = (data) => {
+    if (!data?.personalityInsights) {
+      return 'You both value deep conversations and share similar interests in art and philosophy.';
+    }
 
-  const renderVirtuesSection = () => {
-    const topVirtues = match.virtueProfile?.getTopVirtues?.(3) || [];
+    const insights = data.personalityInsights;
+    const sharedStrengths = insights.sharedStrengths || [];
+    const complementary = insights.complementaryTraits || [];
     
-    if (topVirtues.length === 0) return null;
-
-    return (
-      <View style={styles.section}>
-        <Text style={styles.sectionTitle}>✨ Core Values</Text>
-        <View style={styles.virtuesContainer}>
-          {topVirtues.map((virtue, index) => {
-            const virtueData = VirtueCategories[virtue.virtue];
-            const displayName = virtue.customTerm || virtueData?.name || virtue.virtue;
-            
-            return (
-              <View key={index} style={styles.virtueItem}>
-                <Text style={styles.virtueName}>{displayName}</Text>
-                <Text style={styles.virtueDescription}>
-                  {virtueData?.description || 'Important personal value'}
-                </Text>
-              </View>
-            );
-          })}
-        </View>
-      </View>
-    );
+    if (sharedStrengths.length > 0 && complementary.length > 0) {
+      return `You share ${sharedStrengths.slice(0, 2).join(' and ')} as strengths. ${complementary[0]}.`;
+    } else if (sharedStrengths.length > 0) {
+      return `You both excel in ${sharedStrengths.slice(0, 2).join(' and ')}.`;
+    } else if (complementary.length > 0) {
+      return complementary[0];
+    }
+    
+    return 'You have meaningful compatibility potential based on personality analysis.';
   };
 
-  const renderInterestsSection = () => (
-    <View style={styles.section}>
-      <Text style={styles.sectionTitle}>🎯 Interests</Text>
-      <View style={styles.interestsContainer}>
-        {match.interests?.map((interest, index) => (
-          <View key={index} style={styles.interestTag}>
-            <Text style={styles.interestText}>{interest}</Text>
-          </View>
-        ))}
-      </View>
-    </View>
-  );
-
-  const getPersonalityDescription = (type) => {
-    const descriptions = {
-      'ENFP': 'The Campaigner - Enthusiastic, creative and sociable free spirits who see life as full of possibilities.',
-      'INTJ': 'The Architect - Imaginative and strategic thinkers, with a plan for everything.',
-      'INFJ': 'The Advocate - Quiet and mystical, yet very inspiring and tireless idealists.',
-      'ENTP': 'The Debater - Smart and curious thinkers who cannot resist an intellectual challenge.',
-      'INFP': 'The Mediator - Poetic, kind and altruistic people, always eager to help a good cause.',
-      'ENTJ': 'The Commander - Bold, imaginative and strong-willed leaders, always finding a way.',
-      'INTP': 'The Thinker - Innovative inventors with an unquenchable thirst for knowledge.',
-      'ENFJ': 'The Protagonist - Charismatic and inspiring leaders, able to mesmerize listeners.'
+  const formatBreakdownLabel = (key) => {
+    const labels = {
+      personalityAlignment: 'Personality',
+      valuesAlignment: 'Values',
+      lifestyleCompatibility: 'Lifestyle',
+      communicationStyle: 'Communication',
+      emotionalIntelligence: 'Emotional IQ',
+      conflictResolution: 'Conflict Style'
     };
-    
-    const baseType = type?.substring(0, 4);
-    return descriptions[baseType] || 'A unique and interesting personality type.';
+    return labels[key] || key.replace(/([A-Z])/g, ' $1').replace(/^./, str => str.toUpperCase());
   };
 
   return (
     <SafeAreaView style={styles.container}>
-      {/* Header */}
+      {/* Header with blue gradient */}
       <View style={styles.headerShadow}>
         <LinearGradient
-          colors={['#F8FBFF', '#F8FBFF']}
+          colors={['#1e3c72', '#2a5298']}
           start={{ x: 0, y: 0 }}
           end={{ x: 1, y: 0 }}
           style={[styles.header, { paddingTop: insets.top + 10 }]}
@@ -246,20 +213,26 @@ export default function MatchProfileScreen({ navigation, route }) {
             onPress={() => navigation.goBack()} 
             style={styles.backButton}
           >
-            <Ionicons name="chevron-back" size={28} color="#4A2C6D" />
+            <Ionicons name="chevron-back" size={28} color="#FFFFFF" />
           </TouchableOpacity>
           
           <Text style={styles.headerTitle}>{match.name}</Text>
           
           <TouchableOpacity style={styles.moreButton}>
-            <Ionicons name="ellipsis-vertical" size={24} color="#4A2C6D" />
+            <Ionicons name="ellipsis-vertical" size={24} color="#FFFFFF" />
           </TouchableOpacity>
         </LinearGradient>
       </View>
 
       <ScrollView style={styles.contentContainer} showsVerticalScrollIndicator={false}>
-        {/* Photo carousel */}
-        {renderPhotoCarousel()}
+        {/* Photo */}
+        <View style={styles.photoContainer}>
+          <Image
+            source={{ uri: match.photo }}
+            style={styles.photo}
+            resizeMode="cover"
+          />
+        </View>
 
         {/* Basic info */}
         <View style={styles.basicInfoContainer}>
@@ -274,24 +247,62 @@ export default function MatchProfileScreen({ navigation, route }) {
         </View>
 
         {/* About me */}
-        {match.aboutMe && (
-          <View style={styles.section}>
-            <Text style={styles.sectionTitle}>About Me</Text>
-            <Text style={styles.aboutText}>{match.aboutMe}</Text>
-          </View>
-        )}
+        <View style={styles.section}>
+          <Text style={styles.sectionTitle}>About Me</Text>
+          <Text style={styles.aboutText}>{match.aboutMe}</Text>
+        </View>
 
         {/* Compatibility analysis */}
-        {renderCompatibilitySection()}
-
-        {/* Personality */}
-        {renderPersonalitySection()}
-
-        {/* Core values */}
-        {renderVirtuesSection()}
+        <View style={styles.section}>
+          <Text style={styles.sectionTitle}>Soul Compatibility</Text>
+          {loading ? (
+            <View style={styles.loadingContainer}>
+              <ActivityIndicator size="large" color="#6B46C1" />
+              <Text style={styles.loadingText}>Analyzing compatibility...</Text>
+            </View>
+          ) : (
+            <View style={styles.compatibilityContainer}>
+              <Text style={styles.compatibilityScore}>
+                {Math.round((compatibilityData?.compatibility?.totalScore || 0.87) * 100)}%
+              </Text>
+              <Text style={styles.compatibilityText}>
+                {getCompatibilityLabel(compatibilityData?.compatibility?.totalScore || 0.87)}
+              </Text>
+              <Text style={styles.compatibilityDescription}>
+                {getCompatibilityDescription(compatibilityData)}
+              </Text>
+              
+              {/* Compatibility breakdown */}
+              {compatibilityData?.compatibility?.breakdown && (
+                <View style={styles.breakdownContainer}>
+                  <Text style={styles.breakdownTitle}>Breakdown:</Text>
+                  {Object.entries(compatibilityData.compatibility.breakdown).map(([key, value]) => (
+                    <View key={key} style={styles.breakdownItem}>
+                      <Text style={styles.breakdownLabel}>
+                        {formatBreakdownLabel(key)}
+                      </Text>
+                      <Text style={styles.breakdownValue}>
+                        {Math.round(value * 100)}%
+                      </Text>
+                    </View>
+                  ))}
+                </View>
+              )}
+            </View>
+          )}
+        </View>
 
         {/* Interests */}
-        {renderInterestsSection()}
+        <View style={styles.section}>
+          <Text style={styles.sectionTitle}>Interests</Text>
+          <View style={styles.interestsContainer}>
+            {match.interests.map((interest, index) => (
+              <View key={index} style={styles.interestTag}>
+                <Text style={styles.interestText}>{interest}</Text>
+              </View>
+            ))}
+          </View>
+        </View>
 
         {/* Bottom padding */}
         <View style={styles.bottomPadding} />
@@ -301,7 +312,7 @@ export default function MatchProfileScreen({ navigation, route }) {
       <View style={[styles.actionContainer, { paddingBottom: insets.bottom }]}>
         <TouchableOpacity style={styles.chatButton} onPress={navigateToChat}>
           <LinearGradient
-            colors={['#9b59b6', '#8e44ad']}
+            colors={['#2a5298', '#3b82f6']}
             style={styles.chatButtonGradient}
           >
             <Ionicons name="chatbubble" size={20} color="white" />
@@ -321,10 +332,9 @@ const styles = StyleSheet.create({
   headerShadow: {
     shadowColor: '#000',
     shadowOffset: { width: 0, height: 2 },
-    shadowOpacity: 0.08,
+    shadowOpacity: 0.15,
     shadowRadius: 4,
-    elevation: 2,
-    backgroundColor: '#fff',
+    elevation: 3,
     zIndex: 10,
   },
   header: {
@@ -334,7 +344,7 @@ const styles = StyleSheet.create({
     paddingBottom: 12,
     paddingHorizontal: 16,
     borderBottomWidth: 1,
-    borderBottomColor: 'rgba(74, 44, 109, 0.1)',
+    borderBottomColor: 'rgba(255, 255, 255, 0.1)',
   },
   backButton: {
     padding: 4,
@@ -342,7 +352,7 @@ const styles = StyleSheet.create({
   headerTitle: {
     fontSize: 20,
     fontWeight: 'bold',
-    color: '#4A2C6D',
+    color: '#FFFFFF',
   },
   moreButton: {
     padding: 4,
@@ -357,24 +367,6 @@ const styles = StyleSheet.create({
   photo: {
     width: width,
     height: 400,
-  },
-  photoIndicators: {
-    position: 'absolute',
-    bottom: 16,
-    left: 0,
-    right: 0,
-    flexDirection: 'row',
-    justifyContent: 'center',
-  },
-  photoIndicator: {
-    width: 8,
-    height: 8,
-    borderRadius: 4,
-    backgroundColor: 'rgba(255, 255, 255, 0.5)',
-    marginHorizontal: 4,
-  },
-  activePhotoIndicator: {
-    backgroundColor: 'white',
   },
   basicInfoContainer: {
     padding: 20,
@@ -421,9 +413,8 @@ const styles = StyleSheet.create({
     lineHeight: 24,
     color: '#34495e',
   },
-  compatibilityScoreContainer: {
+  compatibilityContainer: {
     alignItems: 'center',
-    marginBottom: 20,
     padding: 16,
     backgroundColor: '#f8f9fa',
     borderRadius: 12,
@@ -433,109 +424,55 @@ const styles = StyleSheet.create({
     fontWeight: 'bold',
     color: '#27ae60',
   },
-  compatibilityRating: {
+  compatibilityText: {
     fontSize: 16,
-    color: '#7f8c8d',
+    fontWeight: 'bold',
+    color: '#2c3e50',
     marginTop: 4,
   },
-  compatibilityFactors: {
-    marginBottom: 16,
+  compatibilityDescription: {
+    fontSize: 14,
+    color: '#7f8c8d',
+    textAlign: 'center',
+    marginTop: 8,
+    lineHeight: 20,
   },
-  compatibilityFactor: {
-    backgroundColor: 'white',
-    padding: 16,
-    borderRadius: 12,
-    marginBottom: 12,
-    borderLeftWidth: 4,
-    borderLeftColor: '#9b59b6',
-    shadowColor: '#000',
-    shadowOffset: { width: 0, height: 1 },
-    shadowOpacity: 0.1,
-    shadowRadius: 2,
-    elevation: 2,
+  loadingContainer: {
+    alignItems: 'center',
+    paddingVertical: 30,
   },
-  factorHeader: {
+  loadingText: {
+    fontSize: 14,
+    color: '#6B46C1',
+    marginTop: 10,
+  },
+  breakdownContainer: {
+    marginTop: 15,
+    paddingTop: 15,
+    borderTopWidth: 1,
+    borderTopColor: '#e9ecef',
+  },
+  breakdownTitle: {
+    fontSize: 14,
+    fontWeight: '600',
+    color: '#2c3e50',
+    marginBottom: 10,
+    textAlign: 'center',
+  },
+  breakdownItem: {
     flexDirection: 'row',
     justifyContent: 'space-between',
     alignItems: 'center',
-    marginBottom: 8,
-  },
-  factorTitle: {
-    fontSize: 16,
-    fontWeight: 'bold',
-    color: '#2c3e50',
-    flex: 1,
-  },
-  factorScore: {
-    backgroundColor: '#9b59b6',
-    borderRadius: 12,
-    paddingHorizontal: 8,
     paddingVertical: 4,
   },
-  factorScoreText: {
-    color: 'white',
-    fontSize: 12,
-    fontWeight: 'bold',
+  breakdownLabel: {
+    fontSize: 13,
+    color: '#5a6c7d',
   },
-  factorExplanation: {
-    fontSize: 14,
-    color: '#7f8c8d',
-    lineHeight: 20,
-  },
-  insightsContainer: {
-    backgroundColor: '#e8f5e8',
-    padding: 16,
-    borderRadius: 12,
-    borderLeftWidth: 4,
-    borderLeftColor: '#27ae60',
-  },
-  insightsTitle: {
-    fontSize: 16,
-    fontWeight: 'bold',
+  breakdownValue: {
+    fontSize: 13,
+    fontWeight: '600',
     color: '#27ae60',
-    marginBottom: 8,
-  },
-  insightText: {
-    fontSize: 14,
-    color: '#2c3e50',
-    lineHeight: 20,
-    marginBottom: 4,
-  },
-  personalityContainer: {
-    backgroundColor: '#f8f9fa',
-    padding: 16,
-    borderRadius: 12,
-  },
-  personalityType: {
-    fontSize: 20,
-    fontWeight: 'bold',
-    color: '#9b59b6',
-    marginBottom: 8,
-  },
-  personalityDescription: {
-    fontSize: 14,
-    color: '#7f8c8d',
-    lineHeight: 20,
-  },
-  virtuesContainer: {
-    gap: 12,
-  },
-  virtueItem: {
-    backgroundColor: '#f8f9fa',
-    padding: 12,
-    borderRadius: 8,
-    borderLeftWidth: 3,
-    borderLeftColor: '#3498db',
-  },
-  virtueName: {
-    fontSize: 16,
-    fontWeight: 'bold',
-    color: '#2c3e50',
-    marginBottom: 4,
-  },
-  virtueDescription: {
-    fontSize: 14,
-    color: '#7f8c8d',
   },
   interestsContainer: {
     flexDirection: 'row',
@@ -543,16 +480,16 @@ const styles = StyleSheet.create({
     gap: 8,
   },
   interestTag: {
-    backgroundColor: '#e8f4fd',
+    backgroundColor: 'rgba(30, 60, 114, 0.1)',
     paddingHorizontal: 12,
     paddingVertical: 6,
     borderRadius: 16,
     borderWidth: 1,
-    borderColor: '#3498db',
+    borderColor: '#1e3c72',
   },
   interestText: {
     fontSize: 14,
-    color: '#3498db',
+    color: '#1e3c72',
     fontWeight: '500',
   },
   bottomPadding: {

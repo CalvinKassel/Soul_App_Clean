@@ -1,37 +1,13 @@
-# Learn more https://docs.github.com/en/get-started/getting-started-with-git/ignoring-files
+# Add this to your .gitignore file to keep API keys secure
 
-# dependencies
-node_modules/
+# Environment variables
+.env
+.env.local
+.env.development
+.env.production
 
-# Expo
-.expo/
-dist/
-web-build/
-expo-env.d.ts
-
-# Native
-.kotlin/
-*.orig.*
-*.jks
-*.p8
-*.p12
+# API Keys and sensitive data
+config/keys.js
 *.key
-*.mobileprovision
-
-# Metro
-.metro-health-check*
-
-# debug
-npm-debug.*
-yarn-debug.*
-yarn-error.*
-
-# macOS
-.DS_Store
 *.pem
-
-# local env files
-.env*.local
-
-# typescript
-*.tsbuildinfo
+node_modules

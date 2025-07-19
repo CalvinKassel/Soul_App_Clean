@@ -643,6 +643,185 @@ export class ChatRecommendationEngine {
     }
   }
 
-  // Additional helper methods would go here...
-  // (generateCompatibilityExplanation, updateTraitPreferences, etc.)
+  /**
+   * Apply interests to HHC personality adjustments
+   */
+  applyInterestsToHHC(interests, hhcAdjustments) {
+    const interestMappings = {
+      'art': { [HHC_DIMENSIONS.CREATIVITY]: 0.8, [HHC_DIMENSIONS.OPENNESS]: 0.7 },
+      'technology': { [HHC_DIMENSIONS.ANALYTICAL_THINKING]: 0.8, [HHC_DIMENSIONS.OPENNESS]: 0.6 },
+      'philosophy': { [HHC_DIMENSIONS.ABSTRACT_THINKING]: 0.9, [HHC_DIMENSIONS.OPENNESS]: 0.8 },
+      'travel': { [HHC_DIMENSIONS.ADVENTURE]: 0.8, [HHC_DIMENSIONS.OPENNESS]: 0.7 },
+      'reading': { [HHC_DIMENSIONS.INTELLECTUAL_CURIOSITY]: 0.7, [HHC_DIMENSIONS.OPENNESS]: 0.6 },
+      'hiking': { [HHC_DIMENSIONS.PHYSICAL_ACTIVITY]: 0.7, [HHC_DIMENSIONS.NATURE_APPRECIATION]: 0.8 },
+      'cooking': { [HHC_DIMENSIONS.CREATIVITY]: 0.6, [HHC_DIMENSIONS.NURTURING]: 0.7 },
+      'meditation': { [HHC_DIMENSIONS.MINDFULNESS]: 0.9, [HHC_DIMENSIONS.EMOTIONAL_STABILITY]: 0.7 },
+      'music': { [HHC_DIMENSIONS.ARTISTIC_EXPRESSION]: 0.8, [HHC_DIMENSIONS.EMOTIONAL_SENSITIVITY]: 0.6 },
+      'fitness': { [HHC_DIMENSIONS.PHYSICAL_ACTIVITY]: 0.8, [HHC_DIMENSIONS.DISCIPLINE]: 0.7 }
+    };
+
+    interests.forEach(interest => {
+      const mapping = interestMappings[interest.toLowerCase()];
+      if (mapping) {
+        Object.assign(hhcAdjustments, mapping);
+      }
+    });
+  }
+
+  /**
+   * Apply values to HHC personality adjustments
+   */
+  applyValuesToHHC(values, hhcAdjustments) {
+    const valueMappings = {
+      'authenticity': { [HHC_DIMENSIONS.GENUINENESS]: 0.9, [HHC_DIMENSIONS.SELF_AWARENESS]: 0.8 },
+      'creativity': { [HHC_DIMENSIONS.CREATIVITY]: 0.9, [HHC_DIMENSIONS.OPENNESS]: 0.7 },
+      'growth': { [HHC_DIMENSIONS.PERSONAL_DEVELOPMENT]: 0.8, [HHC_DIMENSIONS.ADAPTABILITY]: 0.7 },
+      'knowledge': { [HHC_DIMENSIONS.INTELLECTUAL_CURIOSITY]: 0.8, [HHC_DIMENSIONS.ANALYTICAL_THINKING]: 0.7 },
+      'empathy': { [HHC_DIMENSIONS.EMOTIONAL_INTELLIGENCE]: 0.9, [HHC_DIMENSIONS.COMPASSION]: 0.8 },
+      'balance': { [HHC_DIMENSIONS.EMOTIONAL_STABILITY]: 0.8, [HHC_DIMENSIONS.MINDFULNESS]: 0.7 },
+      'adventure': { [HHC_DIMENSIONS.ADVENTURE]: 0.9, [HHC_DIMENSIONS.SPONTANEITY]: 0.7 },
+      'stability': { [HHC_DIMENSIONS.RELIABILITY]: 0.8, [HHC_DIMENSIONS.ROUTINE_PREFERENCE]: 0.7 },
+      'family': { [HHC_DIMENSIONS.FAMILY_ORIENTATION]: 0.9, [HHC_DIMENSIONS.NURTURING]: 0.8 },
+      'independence': { [HHC_DIMENSIONS.AUTONOMY]: 0.8, [HHC_DIMENSIONS.SELF_RELIANCE]: 0.7 }
+    };
+
+    values.forEach(value => {
+      const mapping = valueMappings[value.toLowerCase()];
+      if (mapping) {
+        Object.assign(hhcAdjustments, mapping);
+      }
+    });
+  }
+
+  /**
+   * Generate detailed compatibility explanation
+   */
+  generateCompatibilityExplanation(compatibility) {
+    const score = Math.round(compatibility.overall * 100);
+    const factors = compatibility.factors || [];
+    
+    let explanation = `We're a ${score}% match! `;
+    
+    if (factors.length > 0) {
+      const topFactor = factors[0];
+      explanation += `What I find most interesting is ${topFactor.description.toLowerCase()}. `;
+      
+      if (factors.length > 1) {
+        explanation += `We also ${factors[1].description.toLowerCase()}.`;
+      }
+    }
+    
+    return explanation;
+  }
+
+  /**
+   * Update trait preferences from feedback
+   */
+  async updateTraitPreferences(traits, direction) {
+    const multiplier = direction === 'positive' ? 1.1 : 0.9;
+    
+    traits.forEach(trait => {
+      if (this.conversationState.preferences.learned[trait.trait]) {
+        this.conversationState.preferences.learned[trait.trait] *= multiplier;
+      } else {
+        this.conversationState.preferences.learned[trait.trait] = direction === 'positive' ? 0.7 : 0.3;
+      }
+    });
+  }
+
+  /**
+   * Analyze user question to determine response type
+   */
+  async analyzeQuestion(feedback) {
+    const message = feedback.originalText.toLowerCase();
+    
+    if (message.includes('why') || message.includes('recommend')) {
+      return { type: 'compatibility' };
+    }
+    
+    if (message.includes('age') || message.includes('old')) {
+      return { type: 'profile_details', aspect: 'age' };
+    }
+    
+    if (message.includes('interest') || message.includes('hobby') || message.includes('like')) {
+      return { type: 'profile_details', aspect: 'interests' };
+    }
+    
+    if (message.includes('work') || message.includes('job')) {
+      return { type: 'profile_details', aspect: 'career' };
+    }
+    
+    return { type: 'general' };
+  }
+
+  /**
+   * Generate detailed profile information
+   */
+  async generateDetailedProfileInfo(aspect) {
+    const candidate = this.conversationState.currentCandidate;
+    if (!candidate) return "I don't have a current recommendation to discuss.";
+    
+    switch (aspect) {
+      case 'age':
+        return `${candidate.name} is ${candidate.age} years old.`;
+      
+      case 'interests':
+        if (candidate.interests && candidate.interests.length > 0) {
+          return `${candidate.name} enjoys ${candidate.interests.join(', ')}. These interests suggest they're ${this.generatePersonalityInsight(candidate.interests)}.`;
+        }
+        return `I don't have specific interest information for ${candidate.name} right now.`;
+      
+      case 'career':
+        return candidate.career ? 
+          `${candidate.name} works in ${candidate.career}.` : 
+          `I don't have career information for ${candidate.name} at the moment.`;
+      
+      default:
+        return `What specifically would you like to know about ${candidate.name}?`;
+    }
+  }
+
+  /**
+   * Generate personality insight from interests
+   */
+  generatePersonalityInsight(interests) {
+    const insights = [];
+    
+    if (interests.includes('art') || interests.includes('music')) {
+      insights.push('creative and expressive');
+    }
+    if (interests.includes('travel') || interests.includes('adventure')) {
+      insights.push('adventurous and open-minded');
+    }
+    if (interests.includes('reading') || interests.includes('philosophy')) {
+      insights.push('thoughtful and intellectual');
+    }
+    if (interests.includes('fitness') || interests.includes('hiking')) {
+      insights.push('active and health-conscious');
+    }
+    
+    return insights.length > 0 ? insights.join(' and ') : 'well-rounded';
+  }
+
+  /**
+   * Generate process explanation
+   */
+  generateProcessExplanation() {
+    return "I use your personality profile and preferences to find people who might be great matches. I look at compatibility across personality traits, values, communication styles, and lifestyle preferences. The more you tell me about what you like or don't like, the better I get at finding your type!";
+  }
+
+  /**
+   * Generate enthusiastic response
+   */
+  generateEnthusiasticResponse() {
+    const responses = [
+      "That's wonderful! I'm so glad you like them!",
+      "Excellent choice! I had a feeling you two would click!",
+      "Perfect! I love when my recommendations hit the mark!",
+      "Amazing! I'm excited to see where this connection goes!",
+      "Fantastic! My algorithm is learning so much about your preferences!"
+    ];
+    
+    return responses[Math.floor(Math.random() * responses.length)];
+  }
 }

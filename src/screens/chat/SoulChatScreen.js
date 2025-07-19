@@ -275,6 +275,36 @@ export default function SoulChatScreen({ navigation, route }) {
           {/* Render candidate profile if available */}
           {item.candidateData && (
             <View style={styles.candidateProfile}>
+              {/* Photos - Most Important: Display first */}
+              {item.candidateData.photos && item.candidateData.photos.length > 0 && (
+                <View style={styles.candidatePhotos}>
+                  <Image 
+                    source={{ uri: item.candidateData.photos[0] }}
+                    style={styles.primaryPhoto}
+                    resizeMode="cover"
+                  />
+                  {item.candidateData.photos.length > 1 && (
+                    <View style={styles.additionalPhotos}>
+                      {item.candidateData.photos.slice(1, 4).map((photo, index) => (
+                        <Image 
+                          key={index}
+                          source={{ uri: photo }}
+                          style={styles.additionalPhoto}
+                          resizeMode="cover"
+                        />
+                      ))}
+                      {item.candidateData.photos.length > 4 && (
+                        <View style={styles.morePhotosIndicator}>
+                          <Text style={styles.morePhotosText}>
+                            +{item.candidateData.photos.length - 4}
+                          </Text>
+                        </View>
+                      )}
+                    </View>
+                  )}
+                </View>
+              )}
+              
               <View style={styles.candidateHeader}>
                 <Text style={styles.candidateName}>
                   {item.candidateData.name}, {item.candidateData.age}
@@ -351,17 +381,27 @@ export default function SoulChatScreen({ navigation, route }) {
     );
   };
 
-  // Handle quick reply selection
-  const handleQuickReply = (reply) => {
+  // Handle quick reply selection with debouncing
+  const [quickReplyProcessing, setQuickReplyProcessing] = useState(false);
+  
+  const handleQuickReply = useCallback((reply) => {
+    // Prevent double-clicks
+    if (quickReplyProcessing || isAIThinking) {
+      return;
+    }
+    
+    setQuickReplyProcessing(true);
     setInput(reply);
+    
     // Automatically send the quick reply
     setTimeout(() => {
-      if (reply.trim()) {
+      if (reply.trim() && !isAIThinking) {
         setInput('');
         handleSend();
       }
+      setQuickReplyProcessing(false);
     }, 100);
-  };
+  }, [quickReplyProcessing, isAIThinking, handleSend]);
 
   // Render thinking indicator
   const renderThinkingIndicator = () => {
@@ -482,11 +522,11 @@ export default function SoulChatScreen({ navigation, route }) {
               />
               <TouchableOpacity
                 onPress={handleSend}
+                disabled={!input.trim() || isAIThinking || quickReplyProcessing}
                 style={[
                   styles.sendButton, 
-                  (!input.trim() || isAIThinking) && styles.disabledButton
+                  (!input.trim() || isAIThinking || quickReplyProcessing) && styles.disabledButton
                 ]}
-                disabled={!input.trim() || isAIThinking}
               >
                 <Ionicons 
                   name={isAIThinking ? "hourglass" : "send"} 
@@ -705,6 +745,40 @@ const styles = StyleSheet.create({
     borderRadius: 12,
     borderWidth: 1,
     borderColor: 'rgba(107, 70, 193, 0.2)',
+  },
+  candidatePhotos: {
+    marginBottom: 12,
+  },
+  primaryPhoto: {
+    width: '100%',
+    height: 200,
+    borderRadius: 12,
+    marginBottom: 8,
+    backgroundColor: COLORS.backgroundGray,
+  },
+  additionalPhotos: {
+    flexDirection: 'row',
+    justifyContent: 'space-between',
+    gap: 6,
+  },
+  additionalPhoto: {
+    width: 60,
+    height: 60,
+    borderRadius: 8,
+    backgroundColor: COLORS.backgroundGray,
+  },
+  morePhotosIndicator: {
+    width: 60,
+    height: 60,
+    borderRadius: 8,
+    backgroundColor: 'rgba(0, 0, 0, 0.6)',
+    justifyContent: 'center',
+    alignItems: 'center',
+  },
+  morePhotosText: {
+    color: '#FFFFFF',
+    fontSize: 12,
+    fontWeight: '600',
   },
   candidateHeader: {
     flexDirection: 'row',

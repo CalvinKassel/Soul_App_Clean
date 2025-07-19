@@ -29,7 +29,7 @@ function MatchesStack() {
 function TabNavigator() {
   return (
     <Tab.Navigator
-      initialRouteName="DiscoveryScreen"
+      initialRouteName="SoulChatScreen"
       screenOptions={{
         headerShown: false,
         tabBarStyle: { display: 'none' },

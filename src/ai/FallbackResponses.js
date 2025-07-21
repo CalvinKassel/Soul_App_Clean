@@ -75,7 +75,7 @@ export const FALLBACK_RESPONSES = {
   getGreetingResponse() {
     const responses = [
       "Hello! It's wonderful to connect with you. I'm here to understand you deeply and help you discover meaningful connections. What's been on your mind about relationships or personal growth lately?",
-      "Hi there! I'm Soul, and I'm here to help you explore what makes you uniquely you. What would you like to talk about today?",
+      "Hi there! I'm here to help you explore what makes you uniquely you. What would you like to talk about today?",
       "Hey! Great to meet you. I love getting to know people on a deeper level. What's something about yourself you've been thinking about recently?",
       "Hello! I'm excited to be part of your journey toward meaningful connection. What's stirring in your heart today?"
     ];

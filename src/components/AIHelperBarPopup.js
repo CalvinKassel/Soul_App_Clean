@@ -41,7 +41,7 @@ const AIHelperBarPopup = ({
   const [isStreaming, setIsStreaming] = useState(false);
   const [quickActions, setQuickActions] = useState([]);
   
-  const slideAnim = useRef(new Animated.Value(POPUP_HEIGHT)).current;
+  const slideAnim = useRef(new Animated.Value(-POPUP_HEIGHT)).current;
   const scrollViewRef = useRef(null);
   const typingText = useTypingEffect(currentStreamingMessage, 30);
 
@@ -103,7 +103,7 @@ const AIHelperBarPopup = ({
 
   const animateOut = () => {
     Animated.spring(slideAnim, {
-      toValue: POPUP_HEIGHT,
+      toValue: -POPUP_HEIGHT,
       useNativeDriver: true,
       tension: 100,
       friction: 8,
@@ -265,6 +265,8 @@ const AIHelperBarPopup = ({
                 <ChatBubble
                   key={message.id}
                   message={message}
+                  showActions={true}
+                  onEdit={(text) => setInputText(text)}
                   onMessageSelect={screenContext === 'matchChat' ? handleMessageSelect : null}
                 />
               ))}
@@ -325,7 +327,7 @@ const AIHelperBarPopup = ({
 const styles = StyleSheet.create({
   modalOverlay: {
     flex: 1,
-    justifyContent: 'flex-end',
+    justifyContent: 'flex-start',
   },
   
   backdrop: {
@@ -343,9 +345,10 @@ const styles = StyleSheet.create({
   popupContainer: {
     height: POPUP_HEIGHT,
     backgroundColor: COLORS.background,
-    borderTopLeftRadius: 20,
-    borderTopRightRadius: 20,
+    borderBottomLeftRadius: 20,
+    borderBottomRightRadius: 20,
     overflow: 'hidden',
+    marginTop: 44, // Space for status bar and safe area
   },
   
   keyboardAvoidingView: {

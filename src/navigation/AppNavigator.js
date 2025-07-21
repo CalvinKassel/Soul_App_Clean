@@ -15,6 +15,7 @@ import MatchesScreen from '../screens/matches/MatchesScreen';
 import ListScreen from '../screens/matches/ListScreen';
 import MatchProfileScreen from '../screens/matches/MatchProfileScreen';
 import ProfileScreen from '../screens/profile/ProfileScreen';
+import UserProfileScreen from '../screens/profile/UserProfileScreen';
 
 // Import Tab Navigator if you want to use it
 import TabNavigator from './TabNavigator';
@@ -25,7 +26,7 @@ const AppNavigator = () => {
   return (
     <NavigationContainer>
       <Stack.Navigator
-        initialRouteName="Login"
+        initialRouteName="MainApp"
         screenOptions={{
           headerStyle: {
             backgroundColor: '#9eb7ec',
@@ -85,6 +86,11 @@ const AppNavigator = () => {
           name="Profile" 
           component={ProfileScreen}
           options={{ title: 'Your Profile' }}
+        />
+        <Stack.Screen 
+          name="UserProfileScreen" 
+          component={UserProfileScreen}
+          options={{ headerShown: false }}
         />
       </Stack.Navigator>
     </NavigationContainer>

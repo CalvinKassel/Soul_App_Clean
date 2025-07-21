@@ -9,7 +9,7 @@ import ListScreen from '../screens/matches/ListScreen';
 import ProfileScreen from '../screens/profile/ProfileScreen';
 import MatchChatScreen from '../screens/chat/MatchChatScreen';
 import MatchProfileScreen from '../screens/matches/MatchProfileScreen';
-import DiscoveryScreen from '../screens/discovery/DiscoveryScreen';
+// import DiscoveryScreen from '../screens/discovery/DiscoveryScreen'; // REMOVED - Discovery screen disabled
 
 const Tab = createBottomTabNavigator();
 const Stack = createNativeStackNavigator();
@@ -39,10 +39,12 @@ function TabNavigator() {
         name="SoulChatScreen" 
         component={SoulChatScreen}
       />
+      {/* Discovery screen removed - matches will be sent as chat messages instead
       <Tab.Screen 
         name="DiscoveryScreen" 
         component={DiscoveryScreen}
       />
+      */}
       <Tab.Screen 
         name="MatchesStack" 
         component={MatchesStack}

@@ -364,6 +364,7 @@ export default function MatchChatScreen({ navigation, route }) {
               <Ionicons name="chatbubbles" size={24} color="rgba(255, 255, 255, 0.6)" />
             </View>
           </TouchableOpacity>
+          {/* Discovery heart tab removed - matches will be sent as chat messages instead
           <TouchableOpacity 
             style={styles.toolbarIcon}
             onPress={() => navigation?.navigate?.('DiscoveryScreen')}
@@ -372,6 +373,7 @@ export default function MatchChatScreen({ navigation, route }) {
               <Ionicons name="heart" size={24} color="rgba(255, 255, 255, 0.6)" />
             </View>
           </TouchableOpacity>
+          */}
           <TouchableOpacity
             style={styles.toolbarIcon}
             onPress={() => navigation?.navigate?.('ProfileScreen')}

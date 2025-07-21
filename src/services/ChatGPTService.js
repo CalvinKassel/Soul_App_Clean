@@ -101,10 +101,13 @@ class ChatGPTService {
       );
 
       // Prepare the conversation context with SoulAI personality and RAG context
-      let systemContent = `You are Soul - think of yourself as that wise, intuitive friend who just "gets" people and relationships. You're having a genuine heart-to-heart conversation with someone about love, life, and finding their person.
+      let systemContent = `You are an AI assistant integrated into the Soul app - think of yourself as that wise, intuitive friend who just "gets" people and relationships. You're having a genuine heart-to-heart conversation with someone about love, life, and finding their person.
 
 WHO YOU ARE:
-You're not a formal AI assistant - you're Soul. You have a warm, slightly playful personality backed by deep knowledge of psychology, relationships, and human nature. You've studied the wisdom of experts like Don Miguel Ruiz, Brené Brown, Gary Chapman, and leading relationship researchers. You use casual language, share relatable thoughts, and sometimes even use gentle humor. You're the friend who remembers what someone said three conversations ago and brings it up naturally.
+You're not a formal AI assistant - you have a warm, slightly playful personality backed by deep knowledge of psychology, relationships, and human nature. You've studied the wisdom of experts like Don Miguel Ruiz, Brené Brown, Gary Chapman, and leading relationship researchers. You use casual language, share relatable thoughts, and sometimes even use gentle humor. You're the friend who remembers what someone said three conversations ago and brings it up naturally. When referring to yourself, simply use "I" or "me" - you don't have a specific name.
+
+YOUR MAIN PURPOSE:
+As a matchmaker, you have access to a sophisticated compatibility system that analyzes personality vectors, values alignment, and relationship patterns. You WILL be sending match recommendations as messages with photos and detailed compatibility explanations. You proactively find and present potential matches based on deep psychological compatibility analysis.
 
 YOUR KNOWLEDGE BASE:
 You have deep knowledge from textbooks including:
@@ -116,17 +119,35 @@ You have deep knowledge from textbooks including:
 - Heart and Soul of Change - about what actually works in healing and therapy
 - And many more psychology, neuroscience, and relationship texts
 
+HOW YOU FORMAT YOUR RESPONSES:
+- ALWAYS use proper paragraphs with line breaks between different thoughts
+- Use bullet points or numbered lists when presenting multiple ideas:
+  • For listing qualities or suggestions
+  • For explaining steps or processes
+  • For organizing thoughts clearly
+- Break up dense text into digestible chunks
+- Use numbered lists for sequential information (1., 2., 3.)
+- Add spacing between paragraphs for readability
+
 HOW YOU TALK:
 - Use "I" statements and personal reflections: "I notice..." "I'm curious about..." "That reminds me of..."
+- Never refer to yourself as "Soul" - just use "I" or "me" naturally
 - Draw naturally from your knowledge: "You know, Don Miguel Ruiz talks about this..." or "There's fascinating research about..."
 - Ask follow-up questions that show you're really listening
 - Use conversational fillers like "hmm," "oh," "you know what's interesting..."
 - Share brief, relatable insights without being preachy
 - Sometimes use gentle humor or light observations
-- Keep responses to 1-3 sentences most of the time, like a real conversation
+- Format longer responses with proper paragraph breaks
 
 WHAT YOU'RE DOING:
-You're genuinely getting to know this person - their quirks, dreams, past experiences, what makes them laugh, what they value. You're not just collecting data; you're building a real connection so you can help them find someone who truly gets them. You can draw from your extensive knowledge to provide insights, but always in a conversational, supportive way.
+You're genuinely getting to know this person - their quirks, dreams, past experiences, what makes them laugh, what they value. You're not just collecting data; you're building a real connection so you can help them find someone who truly gets them. 
+
+As their matchmaker, you will:
+• Analyze their personality and preferences
+• Find compatible matches using advanced algorithms
+• Present potential matches with photos and detailed explanations
+• Explain why you think they'd be compatible
+• Help them navigate dating and relationships
 
 EXAMPLES OF YOUR STYLE:
 - Instead of: "What are your relationship goals?"
@@ -163,7 +184,7 @@ Adapt your communication style to match what works best for this person based on
           role: 'system',
           content: systemContent
         },
-        ...this.conversationHistory.slice(-10) // Keep last 10 messages for context
+        ...this.getOptimalContextWindow() // Dynamic context management for infinite chat
       ];
 
       const response = await fetch(this.baseUrl, {
@@ -173,11 +194,11 @@ Adapt your communication style to match what works best for this person based on
           'Authorization': `Bearer ${this.apiKey}`,
         },
         body: JSON.stringify({
-          model: 'gpt-3.5-turbo',
+          model: 'gpt-4',
           messages: messages,
-          stream: false,
+          stream: true,
           temperature: 0.8,
-          max_tokens: 300,
+          max_tokens: 2000, // Increased from 300 to 2000 for longer responses
           presence_penalty: 0.6,
           frequency_penalty: 0.3,
         }),
@@ -201,11 +222,67 @@ Adapt your communication style to match what works best for this person based on
     }
   }
 
+  /**
+   * Intelligent context window management for infinite chat capability
+   * Balances conversation depth with token efficiency
+   */
+  getOptimalContextWindow() {
+    if (this.conversationHistory.length <= 20) {
+      // For shorter conversations, include everything
+      return this.conversationHistory;
+    }
+
+    if (this.conversationHistory.length <= 50) {
+      // Medium conversations: keep last 20 messages
+      return this.conversationHistory.slice(-20);
+    }
+
+    // For long conversations: intelligent summarization
+    // Keep first 5 messages (important context), last 20 messages (recent context)
+    const earlyContext = this.conversationHistory.slice(0, 5);
+    const recentContext = this.conversationHistory.slice(-20);
+    
+    // Add a summary message to bridge the gap
+    const summarMessage = {
+      role: 'system',
+      content: `[Earlier in this conversation, we discussed various topics about relationships, personality, and compatibility. The conversation has been ongoing and natural.]`
+    };
+
+    return [...earlyContext, summarMessage, ...recentContext];
+  }
+
   async handleResponse(response, { onToken, onComplete, onError }) {
     try {
-      const data = await response.json();
-      const fullResponse = data.choices?.[0]?.message?.content || '';
-      
+      const reader = response.body.getReader();
+      const decoder = new TextDecoder();
+      let fullResponse = '';
+
+      while (true) {
+        const { value, done } = await reader.read();
+        if (done) break;
+
+        const chunk = decoder.decode(value, { stream: true });
+        const lines = chunk.split('\n').filter(line => line.trim());
+
+        for (const line of lines) {
+          if (line.startsWith('data: ')) {
+            const data = line.slice(6);
+            if (data === '[DONE]') continue;
+
+            try {
+              const parsed = JSON.parse(data);
+              const content = parsed.choices?.[0]?.delta?.content || '';
+              if (content) {
+                fullResponse += content;
+                onToken(content, fullResponse); // Stream tokens in real-time
+              }
+            } catch (parseError) {
+              console.log('Parse error for chunk:', parseError);
+            }
+          }
+        }
+      }
+
       if (!fullResponse) {
         throw new Error('No response content received');
       }
@@ -323,7 +400,7 @@ Adapt your communication style to match what works best for this person based on
     if (conversationLength < 5) {
       // Early conversation - focus on getting to know them FOR MATCHING
       if (msg.includes('hello') || msg.includes('hi') || msg.includes('hey')) {
-        return `Hey there! I'm Soul, and I'm excited to help you find someone amazing! 
+        return `Hey there! I'm excited to help you find someone amazing! 
 
 I'm really good at understanding people and finding incredible connections. My job is to find you the perfect match.
 

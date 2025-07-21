@@ -16,7 +16,8 @@ import {
   LayoutAnimation,
   Image,
   Animated,
-  Dimensions
+  Dimensions,
+  Modal
 } from 'react-native';
 import { LinearGradient } from 'expo-linear-gradient';
 import { Ionicons } from '@expo/vector-icons';
@@ -26,9 +27,11 @@ import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import { COLORS, GRADIENTS } from '../../styles/globalStyles';
 import ChatGPTService from '../../services/ChatGPTService';
 import SoulMatchmakingService from '../../services/SoulMatchmakingService';
+import MatchmakingBackendService from '../../services/MatchmakingBackendService';
 import { useScreenMoodGradient } from '../../hooks/useMoodGradient';
 import MoodAnalysisService from '../../services/MoodAnalysisService';
 import { CompactMoodIndicator } from '../../components/MoodIndicator';
+import RecommendationCard from '../../components/chat/RecommendationCard';
 
 export default function SoulChatScreen({ navigation, route }) {
   const insets = useSafeAreaInsets();
@@ -51,14 +54,18 @@ export default function SoulChatScreen({ navigation, route }) {
 
   const initializeMatchmaking = async () => {
     try {
+      console.log('🚀 Initializing matchmaking system...');
+      
       // Sample user profile - in real app this would come from user state/context
       const userProfile = {
         id: 'user_001',
         name: 'Alex',
         age: 25,
+        location: 'San Francisco, CA',
         mbtiType: 'INTJ',
         interests: ['technology', 'philosophy', 'art', 'travel'],
         values: ['authenticity', 'growth', 'creativity'],
+        photos: ['https://i.pravatar.cc/400?img=8'],
         bigFive: {
           openness: 85,
           conscientiousness: 75,
@@ -68,9 +75,26 @@ export default function SoulChatScreen({ navigation, route }) {
         }
       };
 
+      // Try new backend service first
+      console.log('🌐 Attempting to initialize with backend service...');
+      const backendResult = await MatchmakingBackendService.initialize('user_001', userProfile);
+      
+      if (backendResult.success && backendResult.welcomeMessage) {
+        console.log('✅ Backend initialization successful');
+        
+        const initialMessages = [backendResult.welcomeMessage];
+        
+        setMessages(initialMessages);
+        setMatchmakingInitialized(true);
+        
+        return; // Success with backend
+      }
+      
+      // Fallback to existing service
+      console.log('🔄 Falling back to existing matchmaking service...');
       const initResult = await SoulMatchmakingService.initialize('user_001', userProfile);
       
-      if (initResult.success) {
+      if (initResult.success && initResult.welcomeMessage && initResult.welcomeMessage.text && initResult.welcomeMessage.text.trim()) {
         const initialMessages = [initResult.welcomeMessage];
         
         if (initResult.recommendations && initResult.recommendations.length > 0) {
@@ -80,27 +104,22 @@ export default function SoulChatScreen({ navigation, route }) {
         setMessages(initialMessages);
         setMatchmakingInitialized(true);
       } else {
-        // Fallback to basic welcome
-        const fallbackMessage = {
-          id: 'welcome_' + Date.now(),
-          from: 'ai',
-          text: `Hey! I'm Soul, your personal matchmaker. I'm excited to help you find meaningful connections. Tell me what you're looking for in a partner!`,
-          timestamp: new Date().toISOString(),
-          type: 'welcome'
-        };
-        setMessages([fallbackMessage]);
+        throw new Error('Both backend and fallback initialization failed');
       }
+      
     } catch (error) {
-      console.error('Error initializing matchmaking:', error);
-      // Fallback message
-      const errorMessage = {
-        id: 'error_' + Date.now(),
+      console.error('❌ Error initializing matchmaking:', error);
+      
+      // Final fallback message
+      const fallbackMessage = {
+        id: 'fallback_' + Date.now(),
         from: 'ai',
-        text: `Hey! I'm Soul, and I'm here to help you find amazing connections. What kind of person are you hoping to meet?`,
+        text: `Hey! I'm here to help you find amazing connections. What kind of person are you hoping to meet?`,
         timestamp: new Date().toISOString(),
         type: 'fallback'
       };
-      setMessages([errorMessage]);
+      setMessages([fallbackMessage]);
+      setMatchmakingInitialized(true); // Allow basic functionality
     }
   };
 
@@ -141,28 +160,54 @@ export default function SoulChatScreen({ navigation, route }) {
     const currentInput = input.trim();
     setInput('');
 
-    setTimeout(() => {
-      flatListRef.current?.scrollToEnd({ animated: true });
-    }, 100);
+    smartAutoScroll();
 
     setIsAIThinking(true);
 
     try {
       let response;
       
-      // Use matchmaking system if initialized and in matchmaking mode
+      // Try matchmaking system for specific commands only
       if (matchmakingInitialized && isMatchmakingMode) {
-        response = await SoulMatchmakingService.processMatchmakingMessage(currentInput);
+        // Only process matchmaking-specific messages (likes, passes, match requests)
+        const lowerInput = currentInput.toLowerCase();
+        const isMatchmakingCommand = 
+          lowerInput.includes('like') || lowerInput.includes('pass') || 
+          lowerInput.includes('yes') || lowerInput.includes('no') ||
+          lowerInput.includes('show me') || lowerInput.includes('more matches') ||
+          lowerInput.includes('recommendations') || lowerInput.includes('👍') ||
+          lowerInput.includes('👎') || lowerInput.includes('💕');
         
-        if (response.success) {
-          // Add matchmaking response messages
-          setMessages(prev => [...prev, ...response.messages]);
-          setIsAIThinking(false);
+        if (isMatchmakingCommand) {
+          // Try backend service first
+          response = await MatchmakingBackendService.processMatchmakingMessage(currentInput, messages);
           
-          setTimeout(() => {
-            flatListRef.current?.scrollToEnd({ animated: true });
-          }, 100);
-          return;
+          if (response.success) {
+            console.log('✅ Backend matchmaking response received');
+            // Add matchmaking response messages
+            setMessages(prev => [...prev, ...response.messages]);
+            setIsAIThinking(false);
+            
+            setTimeout(() => {
+              flatListRef.current?.scrollToEnd({ animated: true });
+            }, 100);
+            return;
+          }
+          
+          // Fallback to existing service
+          console.log('🔄 Falling back to existing matchmaking service for command processing');
+          response = await SoulMatchmakingService.processMatchmakingMessage(currentInput);
+          
+          if (response.success) {
+            // Add matchmaking response messages
+            setMessages(prev => [...prev, ...response.messages]);
+            setIsAIThinking(false);
+            
+            setTimeout(() => {
+              flatListRef.current?.scrollToEnd({ animated: true });
+            }, 100);
+            return;
+          }
         }
       }
       
@@ -193,9 +238,7 @@ export default function SoulChatScreen({ navigation, route }) {
               : msg
           ));
 
-          setTimeout(() => {
-            flatListRef.current?.scrollToEnd({ animated: true });
-          }, 50);
+          // Don't auto-scroll during streaming - let user scroll freely
         },
         
         onComplete: (finalResponse) => {
@@ -256,22 +299,175 @@ export default function SoulChatScreen({ navigation, route }) {
   }, [input, isAIThinking, matchmakingInitialized, isMatchmakingMode]);
 
   // Render individual message with matchmaking enhancements
+  const handleLikeFromCard = async (recommendation) => {
+    try {
+      const userName = recommendation.candidateData?.name || recommendation.displayName || recommendation.name || 'this person';
+      
+      // 1. Create user message showing their action
+      const userActionMessage = {
+        id: 'user_like_' + Date.now(),
+        from: 'user',
+        text: `I like ${userName}`,
+        timestamp: new Date().toISOString(),
+        type: 'user_action'
+      };
+      
+      setMessages(prev => [...prev, userActionMessage]);
+      setIsAIThinking(true);
+      
+      setTimeout(() => {
+        flatListRef.current?.scrollToEnd({ animated: true });
+      }, 100);
+      
+      // 2. Process the like action
+      const userId = recommendation.userId || recommendation.candidateUserId;
+      const result = await MatchmakingBackendService.likeUser(
+        userId,
+        { source: 'recommendation_card' }
+      );
+      
+      // 3. Generate SoulAI's response
+      let aiResponseText;
+      if (result && result.success) {
+        if (result.isMatch) {
+          aiResponseText = `🎉 Amazing! It's a mutual match with ${userName}! You can now start chatting with them. Would you like to see more recommendations?`;
+        } else {
+          aiResponseText = `Perfect! I've let ${userName}'s AI know you're interested. I'll notify you if they like you back. Ready for the next recommendation?`;
+        }
+      } else {
+        aiResponseText = `I've noted your interest in ${userName}! Let me continue finding great matches for you. Ready for the next one?`;
+      }
+      
+      const aiResponseMessage = {
+        id: 'ai_like_response_' + Date.now(),
+        from: 'ai',
+        text: aiResponseText,
+        timestamp: new Date().toISOString(),
+        type: 'like_response',
+        quickReplies: ['Yes, show me', 'Not yet']
+      };
+      
+      setMessages(prev => [...prev, aiResponseMessage]);
+      setIsAIThinking(false);
+      
+      setTimeout(() => {
+        flatListRef.current?.scrollToEnd({ animated: true });
+      }, 100);
+      
+    } catch (error) {
+      console.error('Error handling like from card:', error);
+      setIsAIThinking(false);
+    }
+  };
+
+  const handlePassFromCard = async (recommendation) => {
+    try {
+      const userName = recommendation.candidateData?.name || recommendation.displayName || recommendation.name || 'this person';
+      
+      // 1. Create user message showing their action
+      const userActionMessage = {
+        id: 'user_pass_' + Date.now(),
+        from: 'user',
+        text: `I'll pass on ${userName}`,
+        timestamp: new Date().toISOString(),
+        type: 'user_action'
+      };
+      
+      setMessages(prev => [...prev, userActionMessage]);
+      setIsAIThinking(true);
+      
+      setTimeout(() => {
+        flatListRef.current?.scrollToEnd({ animated: true });
+      }, 100);
+      
+      // 2. Process the pass action
+      const userId = recommendation.userId || recommendation.candidateUserId;
+      const result = await MatchmakingBackendService.passUser(
+        userId,
+        { source: 'recommendation_card' }
+      );
+      
+      // 3. Generate SoulAI's response
+      const aiResponseText = `No problem at all! Let's find someone who's an even better match for you. Ready for the next recommendation?`;
+      
+      const aiResponseMessage = {
+        id: 'ai_pass_response_' + Date.now(),
+        from: 'ai',
+        text: aiResponseText,
+        timestamp: new Date().toISOString(),
+        type: 'pass_response',
+        quickReplies: ['Yes, show me', 'Not yet']
+      };
+      
+      setMessages(prev => [...prev, aiResponseMessage]);
+      setIsAIThinking(false);
+      
+      setTimeout(() => {
+        flatListRef.current?.scrollToEnd({ animated: true });
+      }, 100);
+      
+    } catch (error) {
+      console.error('Error handling pass from card:', error);
+      setIsAIThinking(false);
+    }
+  };
+
+  const handleTellMeMoreFromCard = (recommendation) => {
+    // Navigate to full profile screen
+    navigation?.navigate?.('UserProfileScreen', { 
+      userId: recommendation.userId || recommendation.candidateUserId,
+      fromMatch: false 
+    });
+  };
+
+  const handleViewProfileFromCard = (recommendation) => {
+    // Navigate to full profile screen
+    navigation?.navigate?.('UserProfileScreen', { 
+      userId: recommendation.userId || recommendation.candidateUserId,
+      fromMatch: false 
+    });
+  };
+
   const renderMessage = ({ item }) => {
     const isUser = item.from === 'user';
     const isWelcome = item.type === 'welcome';
     const isMatchmaking = item.type === 'matchmaking';
+    const isRecommendationCard = item.type === 'recommendation_card';
+    
+    // Handle recommendation cards differently
+    if (isRecommendationCard) {
+      return (
+        <View style={[
+          styles.messageContainer,
+          styles.aiMessageContainer
+        ]}>
+          <RecommendationCard
+            recommendation={item}
+            onLike={handleLikeFromCard}
+            onPass={handlePassFromCard}
+            onTellMeMore={handleTellMeMoreFromCard}
+            onViewProfile={handleViewProfileFromCard}
+          />
+        </View>
+      );
+    }
     
     return (
       <View style={[
         styles.messageContainer,
         isUser ? styles.userMessageContainer : styles.aiMessageContainer
       ]}>
-        <View style={[
-          styles.messageBubble,
-          isUser ? styles.userBubble : styles.aiBubble,
-          isWelcome && styles.welcomeBubble,
-          isMatchmaking && styles.matchmakingBubble
-        ]}>
+        <TouchableOpacity 
+          style={[
+            styles.messageBubble,
+            isUser ? styles.userBubble : styles.aiBubble,
+            isWelcome && styles.welcomeBubble,
+            isMatchmaking && styles.matchmakingBubble
+          ]}
+          onLongPress={() => handleLongPress(item)}
+          delayLongPress={500}
+          activeOpacity={0.8}
+        >
           {/* Render candidate profile if available */}
           {item.candidateData && (
             <View style={styles.candidateProfile}>
@@ -346,22 +542,7 @@ export default function SoulChatScreen({ navigation, route }) {
             {item.text}
           </Text>
           
-          {/* Render quick reply options */}
-          {item.quickReplies && item.quickReplies.length > 0 && (
-            <View style={styles.quickRepliesContainer}>
-              {item.quickReplies.map((reply, index) => (
-                <TouchableOpacity
-                  key={index}
-                  style={styles.quickReplyButton}
-                  onPress={() => handleQuickReply(reply)}
-                >
-                  <Text style={styles.quickReplyText}>{reply}</Text>
-                </TouchableOpacity>
-              ))}
-            </View>
-          )}
-          
-          {item.isStreaming && (
+          {item.isStreaming && !isUser && (
             <Animated.View
               style={[
                 styles.streamingIndicator,
@@ -373,35 +554,193 @@ export default function SoulChatScreen({ navigation, route }) {
                 },
               ]}
             >
-              <Text style={styles.streamingDot}>●</Text>
+              <Text style={styles.streamingDot}>● ● ●</Text>
             </Animated.View>
           )}
-        </View>
+        </TouchableOpacity>
+        
+        {/* Render quick reply options below chat bubble */}
+        {item.quickReplies && item.quickReplies.length > 0 && !isUser && (
+          <View style={styles.quickRepliesContainer}>
+            {['Yes, show me', 'Tell me more', 'No, not yet'].map((reply, index) => (
+              <TouchableOpacity
+                key={index}
+                style={styles.quickReplyButton}
+                onPress={() => handleQuickReply(reply)}
+              >
+                <Text style={styles.quickReplyText}>{reply}</Text>
+              </TouchableOpacity>
+            ))}
+          </View>
+        )}
       </View>
     );
   };
 
   // Handle quick reply selection with debouncing
   const [quickReplyProcessing, setQuickReplyProcessing] = useState(false);
+  const [longPressMenuVisible, setLongPressMenuVisible] = useState(false);
+  const [selectedMessage, setSelectedMessage] = useState(null);
+  const [isUserScrolling, setIsUserScrolling] = useState(false);
+
+  // Smart auto-scroll that respects user scrolling behavior
+  const smartAutoScroll = (immediate = false) => {
+    // Don't auto-scroll if user is actively scrolling up to read old messages
+    if (isUserScrolling) return;
+    
+    const delay = immediate ? 0 : 100;
+    setTimeout(() => {
+      if (!isUserScrolling) { // Double-check user isn't scrolling
+        flatListRef.current?.scrollToEnd({ animated: true });
+      }
+    }, delay);
+  };
+
+  // Handle long press on message bubbles
+  const handleLongPress = (message) => {
+    setSelectedMessage(message);
+    setLongPressMenuVisible(true);
+  };
+
+  // Menu action handlers
+  const handleCopyMessage = () => {
+    // TODO: Implement copy to clipboard
+    console.log('Copy message:', selectedMessage.text);
+    setLongPressMenuVisible(false);
+    setSelectedMessage(null);
+  };
+
+  const handleSelectText = () => {
+    // TODO: Implement text selection
+    console.log('Select text:', selectedMessage.text);
+    setLongPressMenuVisible(false);
+    setSelectedMessage(null);
+  };
+
+  const handleGoodResponse = () => {
+    console.log('Good response feedback for:', selectedMessage.text);
+    setLongPressMenuVisible(false);
+    setSelectedMessage(null);
+  };
+
+  const handleBadResponse = () => {
+    console.log('Bad response feedback for:', selectedMessage.text);
+    setLongPressMenuVisible(false);
+    setSelectedMessage(null);
+  };
+
+  const handleRegenerateResponse = async () => {
+    console.log('Regenerate response for:', selectedMessage.text);
+    setLongPressMenuVisible(false);
+    setSelectedMessage(null);
+    
+    // TODO: Implement regeneration logic
+    setIsAIThinking(true);
+    // Simulate regeneration
+    setTimeout(() => {
+      setIsAIThinking(false);
+    }, 2000);
+  };
   
-  const handleQuickReply = useCallback((reply) => {
+  const handleQuickReply = useCallback(async (reply) => {
     // Prevent double-clicks
     if (quickReplyProcessing || isAIThinking) {
       return;
     }
     
     setQuickReplyProcessing(true);
-    setInput(reply);
     
-    // Automatically send the quick reply
-    setTimeout(() => {
-      if (reply.trim() && !isAIThinking) {
-        setInput('');
-        handleSend();
+    try {
+      const replyText = reply.trim();
+      if (!replyText) {
+        setQuickReplyProcessing(false);
+        return;
       }
+
+      // Create user message for the quick reply
+      const userMessage = {
+        id: 'user_qr_' + Date.now(),
+        from: 'user',
+        text: replyText,
+        timestamp: new Date().toISOString()
+      };
+
+      setMessages(prev => [...prev, userMessage]);
+
+      setTimeout(() => {
+        flatListRef.current?.scrollToEnd({ animated: true });
+      }, 100);
+
+      setIsAIThinking(true);
+
+      // Process the reply through matchmaking system
+      if (matchmakingInitialized && isMatchmakingMode) {
+        const response = await MatchmakingBackendService.processMatchmakingMessage(replyText, messages);
+        
+        if (response.success) {
+          console.log('✅ Backend matchmaking response received');
+          setMessages(prev => [...prev, ...response.messages]);
+          setIsAIThinking(false);
+          
+          setTimeout(() => {
+            flatListRef.current?.scrollToEnd({ animated: true });
+          }, 100);
+          
+          setQuickReplyProcessing(false);
+          return;
+        }
+      }
+      
+      // Fallback to regular ChatGPT response
+      const aiMessageId = 'ai_qr_' + Date.now();
+      const aiMessagePlaceholder = {
+        id: aiMessageId,
+        from: 'ai',
+        text: '',
+        timestamp: new Date().toISOString(),
+        isStreaming: true
+      };
+
+      setMessages(prev => [...prev, aiMessagePlaceholder]);
+
+      await ChatGPTService.sendMessage(replyText, {
+        onToken: (token, fullResponse) => {
+          setMessages(prev => prev.map(msg => 
+            msg.id === aiMessageId 
+              ? { ...msg, text: fullResponse, isStreaming: true }
+              : msg
+          ));
+        },
+        onComplete: (finalResponse) => {
+          setIsAIThinking(false);
+          setMessages(prev => prev.map(msg => 
+            msg.id === aiMessageId 
+              ? { ...msg, text: finalResponse, isStreaming: false }
+              : msg
+          ));
+          
+          setTimeout(() => {
+            flatListRef.current?.scrollToEnd({ animated: true });
+          }, 100);
+        },
+        onError: (error) => {
+          setIsAIThinking(false);
+          console.error('Error in quick reply ChatGPT response:', error);
+          setMessages(prev => prev.map(msg => 
+            msg.id === aiMessageId 
+              ? { ...msg, text: 'Sorry, I encountered an error processing your request. Please try again.', isStreaming: false }
+              : msg
+          ));
+        }
+      });
+      
+    } catch (error) {
+      console.error('Error handling quick reply:', error);
+      setIsAIThinking(false);
+    } finally {
       setQuickReplyProcessing(false);
-    }, 100);
-  }, [quickReplyProcessing, isAIThinking, handleSend]);
+    }
+  }, [quickReplyProcessing, isAIThinking, matchmakingInitialized, isMatchmakingMode, messages]);
 
   // Render thinking indicator
   const renderThinkingIndicator = () => {
@@ -409,8 +748,7 @@ export default function SoulChatScreen({ navigation, route }) {
 
     return (
       <View style={styles.thinkingContainer}>
-        <View style={styles.thinkingBubble}>
-          <Animated.View style={styles.thinkingDots}>
+        <Animated.View style={styles.thinkingDots}>
             <Animated.Text
               style={[
                 styles.thinkingDot,
@@ -450,9 +788,7 @@ export default function SoulChatScreen({ navigation, route }) {
             >
               ●
             </Animated.Text>
-          </Animated.View>
-          <Text style={styles.thinkingText}>Soul is thinking...</Text>
-        </View>
+        </Animated.View>
       </View>
     );
   };
@@ -468,7 +804,6 @@ export default function SoulChatScreen({ navigation, route }) {
           style={[styles.header, { paddingTop: insets.top + 10 }]}
         >
           <View style={styles.headerLeft}>
-            <Ionicons name="chatbubbles" size={24} color={COLORS.primary} style={styles.soulIcon} />
             <Text style={styles.soulHeading}>Soul</Text>
           </View>
         </LinearGradient>
@@ -495,10 +830,16 @@ export default function SoulChatScreen({ navigation, route }) {
             style={styles.messagesList}
             contentContainerStyle={styles.messagesContent}
             showsVerticalScrollIndicator={false}
-            onContentSizeChange={() => {
-              setTimeout(() => {
-                flatListRef.current?.scrollToEnd({ animated: true });
-              }, 100);
+            onScroll={(event) => {
+              // Detect if user is manually scrolling
+              const { contentOffset, contentSize, layoutMeasurement } = event.nativeEvent;
+              const isAtBottom = contentOffset.y >= (contentSize.height - layoutMeasurement.height - 20);
+              setIsUserScrolling(!isAtBottom);
+            }}
+            onScrollBeginDrag={() => setIsUserScrolling(true)}
+            onScrollEndDrag={() => {
+              // Reset user scrolling after a delay
+              setTimeout(() => setIsUserScrolling(false), 2000);
             }}
             ListFooterComponent={renderThinkingIndicator}
           />
@@ -510,7 +851,7 @@ export default function SoulChatScreen({ navigation, route }) {
                 style={[styles.input, styles.inputFont]}
                 value={input}
                 onChangeText={setInput}
-                placeholder="Share what's on your heart..."
+                placeholder="Aa ..."
                 placeholderTextColor={COLORS.textPlaceholder}
                 multiline
                 returnKeyType="send"
@@ -554,10 +895,10 @@ export default function SoulChatScreen({ navigation, route }) {
           </TouchableOpacity>
           <TouchableOpacity
             style={styles.toolbarIcon}
-            onPress={() => navigation?.navigate?.('DiscoveryScreen')}
+            onPress={() => navigation?.navigate?.('MatchList')}
           >
             <View style={styles.iconContainer}>
-              <Ionicons name="heart" size={24} color="rgba(255, 255, 255, 0.6)" />
+              <Ionicons name="list" size={24} color="rgba(255, 255, 255, 0.6)" />
             </View>
           </TouchableOpacity>
           <TouchableOpacity
@@ -570,6 +911,49 @@ export default function SoulChatScreen({ navigation, route }) {
           </TouchableOpacity>
         </View>
       </LinearGradient>
+
+      {/* Long Press Menu Modal */}
+      {longPressMenuVisible && (
+        <Modal
+          transparent={true}
+          visible={longPressMenuVisible}
+          animationType="fade"
+          onRequestClose={() => setLongPressMenuVisible(false)}
+        >
+          <TouchableOpacity 
+            style={styles.modalOverlay}
+            activeOpacity={1}
+            onPress={() => setLongPressMenuVisible(false)}
+          >
+            <View style={styles.longPressMenu}>
+              <TouchableOpacity style={styles.menuItem} onPress={handleCopyMessage}>
+                <Ionicons name="copy" size={20} color="#4A90E2" />
+                <Text style={styles.menuItemText}>Copy</Text>
+              </TouchableOpacity>
+              <TouchableOpacity style={styles.menuItem} onPress={handleSelectText}>
+                <Ionicons name="text" size={20} color="#4A90E2" />
+                <Text style={styles.menuItemText}>Select text</Text>
+              </TouchableOpacity>
+              {selectedMessage?.from === 'ai' && (
+                <>
+                  <TouchableOpacity style={styles.menuItem} onPress={handleGoodResponse}>
+                    <Ionicons name="thumbs-up" size={20} color="#4ECDC4" />
+                    <Text style={styles.menuItemText}>Good response</Text>
+                  </TouchableOpacity>
+                  <TouchableOpacity style={styles.menuItem} onPress={handleBadResponse}>
+                    <Ionicons name="thumbs-down" size={20} color="#FF6B6B" />
+                    <Text style={styles.menuItemText}>Bad response</Text>
+                  </TouchableOpacity>
+                  <TouchableOpacity style={styles.menuItem} onPress={handleRegenerateResponse}>
+                    <Ionicons name="refresh" size={20} color="#F59E0B" />
+                    <Text style={styles.menuItemText}>Regenerate response</Text>
+                  </TouchableOpacity>
+                </>
+              )}
+            </View>
+          </TouchableOpacity>
+        </Modal>
+      )}
     </SafeAreaView>
   );
 }
@@ -638,14 +1022,18 @@ const styles = StyleSheet.create({
 
   // Message Styles - Enhanced for dark gradient background
   messageContainer: {
-    flexDirection: 'row',
+    flexDirection: 'column',
     marginVertical: 6,
-    alignItems: 'flex-end',
+    // alignItems removed for stretch
   },
   userMessageContainer: {
+    flexDirection: 'column',
+    alignItems: 'flex-end',
     justifyContent: 'flex-end',
   },
   aiMessageContainer: {
+    flexDirection: 'column',
+    alignItems: 'flex-start',
     justifyContent: 'flex-start',
   },
   
@@ -837,17 +1225,18 @@ const styles = StyleSheet.create({
 
   // Quick Replies Styles
   quickRepliesContainer: {
-    marginTop: 12,
-    flexDirection: 'row',
-    flexWrap: 'wrap',
+    marginTop: 8,
+    flexDirection: 'column',
+    width: '100%',
+    alignItems: 'flex-start',
     gap: 6,
   },
   quickReplyButton: {
-    backgroundColor: 'rgba(107, 70, 193, 0.1)',
-    paddingHorizontal: 12,
-    paddingVertical: 6,
-    borderRadius: 16,
-    borderWidth: 1,
+    backgroundColor: 'rgba(255, 255, 255, 0.1)',
+    paddingHorizontal: 16,
+    paddingVertical: 8,
+    borderRadius: 20,
+    borderWidth: 1.5,
     borderColor: COLORS.primary,
   },
   quickReplyText: {
@@ -995,5 +1384,55 @@ const styles = StyleSheet.create({
     shadowOpacity: 0.15,
     shadowRadius: 4,
     elevation: 3,
+  },
+
+  // Quick Reply Styles - Subtle border style without solid background
+  quickRepliesContainer: {
+    flexDirection: 'row',
+    gap: 8,
+    marginTop: 8,
+    marginBottom: 4,
+    paddingHorizontal: 0,
+    flexWrap: 'wrap',
+    alignItems: 'flex-start',
+  },
+  quickReplyText: {
+    color: '#FFFFFF',
+    fontSize: 14,
+    fontWeight: '500',
+    textShadowColor: 'rgba(0, 0, 0, 0.3)',
+    textShadowOffset: { width: 1, height: 1 },
+    textShadowRadius: 2,
+  },
+
+  // Long Press Menu Styles
+  modalOverlay: {
+    flex: 1,
+    backgroundColor: 'rgba(0, 0, 0, 0.5)',
+    justifyContent: 'center',
+    alignItems: 'center',
+  },
+  longPressMenu: {
+    backgroundColor: 'white',
+    borderRadius: 12,
+    paddingVertical: 8,
+    minWidth: 200,
+    shadowColor: '#000',
+    shadowOffset: { width: 0, height: 2 },
+    shadowOpacity: 0.25,
+    shadowRadius: 8,
+    elevation: 8,
+  },
+  menuItem: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    paddingHorizontal: 16,
+    paddingVertical: 12,
+  },
+  menuItemText: {
+    fontSize: 16,
+    color: '#333',
+    marginLeft: 12,
+    fontWeight: '500',
   },
 });

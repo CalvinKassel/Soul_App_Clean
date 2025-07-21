@@ -84,6 +84,19 @@ export const COLORS = {
   toolbarBorder: '#d1b3ff',   // Light purple for toolbar border
 };
 
+// Night Mode (Northern Lights) Colors
+export const NIGHT_COLORS = {
+  nightBlack: '#0a0a1a',      // Deep night black
+  auroraBlue: '#1a2a6c',     // Deep blue (northern sky)
+  auroraGreen: '#29e6a7',    // Aurora green
+  auroraTeal: '#1fc8db',     // Teal for aurora effect
+  nightText: '#e0f7fa',      // Light blue/green for text
+  nightAccent: '#29e6a7',    // Aurora green accent
+  nightBorder: '#1a2a6c',    // Deep blue border
+  nightInactive: '#22334d',  // Inactive/disabled night color
+  nightWhite: '#ffffff',     // For contrast
+};
+
 export const GRADIENTS = {
   // Cotton Candy Gradient Combinations
   cottonCandyMain: ['#cbbaf1', '#e8bef3', '#B8E6FF', '#9eb7ec'],    // Main cotton candy gradient
@@ -107,6 +120,9 @@ export const GRADIENTS = {
   cottonCandyFlow: ['#cbbaf1', '#e8bef3', '#B8E6FF', '#9eb7ec'],     // Flowing cotton candy
   cottonCandyDream: ['#f0ebff', '#e8bef3', '#B8E6FF', '#e8deff'],    // Dreamy cotton candy
   cottonCandyBurst: ['#9eb7ec', '#B8E6FF', '#e8bef3', '#cbbaf1'],    // Bursting cotton candy
+  
+  // Night Mode (Northern Lights) Gradient
+  northernLights: ['#0a0a1a', '#1a2a6c', '#29e6a7'], // Black, blue, aurora green
 };
 
 export const SPACING = {
@@ -390,6 +406,7 @@ export const ANIMATIONS = {
 // Export everything as default
 export default {
   COLORS,
+  NIGHT_COLORS,
   GRADIENTS,
   SPACING,
   TYPOGRAPHY,

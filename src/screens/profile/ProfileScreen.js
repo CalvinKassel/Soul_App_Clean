@@ -1,4 +1,4 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import {
   SafeAreaView,
   View,
@@ -7,7 +7,8 @@ import {
   ScrollView,
   TouchableOpacity,
   Image,
-  TextInput
+  TextInput,
+  Modal
 } from 'react-native';
 import { LinearGradient } from 'expo-linear-gradient';
 import { Ionicons } from '@expo/vector-icons';
@@ -16,6 +17,7 @@ import { COLORS, GRADIENTS } from '../../styles/globalStyles';
 
 export default function ProfileScreen({ navigation }) {
   const insets = useSafeAreaInsets();
+  const [modalVisible, setModalVisible] = useState(false);
   
   // Sample user data - this would come from your user state/context
   const [userData] = useState({
@@ -32,6 +34,14 @@ export default function ProfileScreen({ navigation }) {
         { virtue: 'JUSTICE', score: 0.78, customTerm: 'fairness' },
         { virtue: 'TEMPERANCE', score: 0.72, customTerm: 'balance' }
       ]
+    },
+    // HHC Data
+    hhcData: {
+      vector: Array(256).fill(0).map(() => Math.random()), // Sample HHC vector
+      code: 'HHC:7A4B-E9C2',
+      confidence: 0.87,
+      generated_at: new Date().toISOString(),
+      version: '2.0'
     }
   });
 
@@ -179,6 +189,85 @@ export default function ProfileScreen({ navigation }) {
     );
   };
 
+  // HHC Stamp Component
+  const renderHHCStamp = () => {
+    if (!userData.hhcData) return null;
+
+    return (
+      <TouchableOpacity 
+        style={styles.hhcStampContainer}
+        onPress={() => setModalVisible(true)}
+        activeOpacity={0.7}
+      >
+        <Text style={styles.hhcStampText}>{userData.hhcData.code}</Text>
+        <Text style={styles.hhcStampVersion}>v{userData.hhcData.version}</Text>
+      </TouchableOpacity>
+    );
+  };
+
+  // HHC Explanation Modal
+  const renderHHCModal = () => {
+    return (
+      <Modal
+        animationType="slide"
+        transparent={true}
+        visible={modalVisible}
+        onRequestClose={() => setModalVisible(false)}
+      >
+        <View style={styles.modalOverlay}>
+          <View style={styles.modalContainer}>
+            <View style={styles.modalHeader}>
+              <Text style={styles.modalTitle}>Human Hex Code (HHC)</Text>
+              <TouchableOpacity 
+                onPress={() => setModalVisible(false)}
+                style={styles.modalCloseButton}
+              >
+                <Ionicons name="close" size={24} color={COLORS.textSecondary} />
+              </TouchableOpacity>
+            </View>
+            
+            <ScrollView style={styles.modalContent}>
+              <Text style={styles.modalText}>
+                Your <Text style={styles.modalBoldText}>Human Hex Code (HHC)</Text> is a unique 256-dimensional personality signature created by analyzing your conversations, preferences, and behavioral patterns.
+              </Text>
+              
+              <Text style={styles.modalSubheading}>What it includes:</Text>
+              <Text style={styles.modalBullet}>• Big Five personality traits</Text>
+              <Text style={styles.modalBullet}>• Attachment and communication styles</Text>
+              <Text style={styles.modalBullet}>• Core values and interests</Text>
+              <Text style={styles.modalBullet}>• Relationship patterns and preferences</Text>
+              
+              <Text style={styles.modalSubheading}>How it helps:</Text>
+              <Text style={styles.modalText}>
+                Other users' AI can instantly understand your personality for more accurate compatibility matching, while keeping your data secure and private.
+              </Text>
+              
+              <View style={styles.modalStatsContainer}>
+                <View style={styles.modalStat}>
+                  <Text style={styles.modalStatLabel}>Confidence</Text>
+                  <Text style={styles.modalStatValue}>{Math.round(userData.hhcData?.confidence * 100)}%</Text>
+                </View>
+                <View style={styles.modalStat}>
+                  <Text style={styles.modalStatLabel}>Last Updated</Text>
+                  <Text style={styles.modalStatValue}>
+                    {userData.hhcData?.generated_at ? new Date(userData.hhcData.generated_at).toLocaleDateString() : 'N/A'}
+                  </Text>
+                </View>
+              </View>
+            </ScrollView>
+            
+            <TouchableOpacity 
+              style={styles.modalButton}
+              onPress={() => setModalVisible(false)}
+            >
+              <Text style={styles.modalButtonText}>Got it!</Text>
+            </TouchableOpacity>
+          </View>
+        </View>
+      </Modal>
+    );
+  };
+
   return (
     <SafeAreaView style={styles.container}>
       {/* Header with cotton candy gradient */}
@@ -258,6 +347,7 @@ export default function ProfileScreen({ navigation }) {
               <Ionicons name="chatbubbles" size={24} color="rgba(255, 255, 255, 0.6)" />
             </View>
           </TouchableOpacity>
+          {/* Discovery heart tab removed - matches will be sent as chat messages instead
           <TouchableOpacity
             style={styles.toolbarIcon}
             onPress={() => navigation?.navigate?.('DiscoveryScreen')}
@@ -266,6 +356,7 @@ export default function ProfileScreen({ navigation }) {
               <Ionicons name="heart" size={24} color="rgba(255, 255, 255, 0.6)" />
             </View>
           </TouchableOpacity>
+          */}
           <TouchableOpacity style={styles.toolbarIcon}>
             <View style={[styles.iconContainer, styles.activeIcon]}>
               <Ionicons name="person" size={24} color="#4A2C6D" />
@@ -273,6 +364,12 @@ export default function ProfileScreen({ navigation }) {
           </TouchableOpacity>
         </View>
       </LinearGradient>
+
+      {/* HHC Stamp - positioned in bottom-right corner */}
+      {renderHHCStamp()}
+
+      {/* HHC Information Modal */}
+      {renderHHCModal()}
 
     </SafeAreaView>
   );
@@ -351,7 +448,7 @@ const styles = StyleSheet.create({
     color: 'rgba(255, 255, 255, 0.8)',
   },
   section: {
-    marginBottom: 24,
+    marginBottom: 32,
     paddingHorizontal: 16,
   },
   sectionHeader: {
@@ -550,5 +647,132 @@ const styles = StyleSheet.create({
   personalityTag: {
     backgroundColor: COLORS.secondary,
     borderColor: COLORS.secondary,
+  },
+  
+  // HHC Stamp Styles
+  hhcStampContainer: {
+    position: 'absolute',
+    bottom: 110, // Above the toolbar
+    right: 20,
+    backgroundColor: 'transparent',
+    paddingHorizontal: 6,
+    paddingVertical: 4,
+  },
+  hhcStampText: {
+    fontFamily: 'monospace',
+    fontSize: 11,
+    fontWeight: 'bold',
+    color: 'rgba(255, 255, 255, 0.4)',
+    letterSpacing: 0.5,
+    textShadowColor: 'rgba(0, 0, 0, 0.2)',
+    textShadowOffset: { width: 1, height: 1 },
+    textShadowRadius: 1,
+  },
+  hhcStampVersion: {
+    fontFamily: 'monospace',
+    fontSize: 9,
+    color: 'rgba(255, 255, 255, 0.3)',
+    textAlign: 'center',
+    marginTop: 1,
+    textShadowColor: 'rgba(0, 0, 0, 0.2)',
+    textShadowOffset: { width: 1, height: 1 },
+    textShadowRadius: 1,
+  },
+  
+  // Modal Styles
+  modalOverlay: {
+    flex: 1,
+    justifyContent: 'center',
+    alignItems: 'center',
+    backgroundColor: 'rgba(0, 0, 0, 0.5)',
+  },
+  modalContainer: {
+    backgroundColor: 'white',
+    borderRadius: 20,
+    padding: 0,
+    width: '90%',
+    maxHeight: '80%',
+    shadowColor: '#000',
+    shadowOffset: { width: 0, height: 2 },
+    shadowOpacity: 0.25,
+    shadowRadius: 4,
+    elevation: 5,
+  },
+  modalHeader: {
+    flexDirection: 'row',
+    justifyContent: 'space-between',
+    alignItems: 'center',
+    padding: 20,
+    borderBottomWidth: 1,
+    borderBottomColor: COLORS.borderLight,
+  },
+  modalTitle: {
+    fontSize: 20,
+    fontWeight: 'bold',
+    color: COLORS.textPrimary,
+  },
+  modalCloseButton: {
+    padding: 5,
+  },
+  modalContent: {
+    padding: 20,
+    maxHeight: 400,
+  },
+  modalText: {
+    fontSize: 16,
+    lineHeight: 24,
+    color: COLORS.textPrimary,
+    marginBottom: 16,
+  },
+  modalBoldText: {
+    fontWeight: 'bold',
+    color: COLORS.primary,
+  },
+  modalSubheading: {
+    fontSize: 16,
+    fontWeight: '600',
+    color: COLORS.textPrimary,
+    marginTop: 16,
+    marginBottom: 8,
+  },
+  modalBullet: {
+    fontSize: 15,
+    lineHeight: 22,
+    color: COLORS.textSecondary,
+    marginLeft: 8,
+    marginBottom: 4,
+  },
+  modalStatsContainer: {
+    flexDirection: 'row',
+    justifyContent: 'space-around',
+    marginTop: 20,
+    paddingTop: 16,
+    borderTopWidth: 1,
+    borderTopColor: COLORS.borderLight,
+  },
+  modalStat: {
+    alignItems: 'center',
+  },
+  modalStatLabel: {
+    fontSize: 14,
+    color: COLORS.textSecondary,
+    marginBottom: 4,
+  },
+  modalStatValue: {
+    fontSize: 16,
+    fontWeight: 'bold',
+    color: COLORS.primary,
+  },
+  modalButton: {
+    backgroundColor: COLORS.primary,
+    borderRadius: 10,
+    padding: 15,
+    alignItems: 'center',
+    margin: 20,
+  },
+  modalButtonText: {
+    color: 'white',
+    fontSize: 16,
+    fontWeight: '600',
   },
 });

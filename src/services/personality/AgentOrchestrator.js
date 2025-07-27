@@ -9,6 +9,7 @@
 import { InteractionStyler } from './InteractionStyler';
 import { HHCPersonalitySystem } from '../compatibility/HHCPersonalitySystem';
 import { HarmonyAlgorithm } from '../compatibility/HarmonyAlgorithm';
+import { userControlManager } from './UserControlManager';
 
 export class AgentOrchestrator {
   constructor() {
@@ -108,6 +109,7 @@ export class AgentOrchestrator {
 
   /**
    * Gets interaction profile from cache or creates new one
+   * Now includes user control filtering
    */
   getInteractionProfile(userId, hhc) {
     const cacheKey = InteractionStyler.getCacheKey(userId);
@@ -119,17 +121,26 @@ export class AgentOrchestrator {
       return cached.profile;
     }
 
-    // Generate new interaction profile
+    // Generate new interaction profile from HHC
     console.log('🎨 Creating new interaction profile for user:', userId);
-    const profile = InteractionStyler.createInteractionProfile(hhc);
+    const baseProfile = InteractionStyler.createInteractionProfile(hhc);
     
-    // Cache the profile
+    // 🎛️ Apply user control filters - THIS IS KEY!
+    const controlledProfile = userControlManager.applyUserControl(userId, baseProfile);
+    
+    // Cache the controlled profile
     this.profileCache.set(cacheKey, {
-      profile,
+      profile: controlledProfile,
       timestamp: Date.now()
     });
 
-    return profile;
+    console.log('🎛️ Applied user control settings:', {
+      baseStyle: baseProfile.tone,
+      finalStyle: controlledProfile.tone,
+      userHasOverrides: baseProfile.tone !== controlledProfile.tone
+    });
+
+    return controlledProfile;
   }
 
   /**

@@ -28,6 +28,8 @@ import { COLORS, GRADIENTS } from '../../styles/globalStyles';
 import VertexAIChatService from '../../services/VertexAIChatService';
 import AIProviderManager from '../../services/AIProviderManager';
 import SoulMatchmakingService from '../../services/SoulMatchmakingService';
+import LearningConsentPopup from '../../components/LearningConsentPopup';
+import { learningConsentManager } from '../../services/personality/LearningConsentManager';
 import MatchmakingBackendService from '../../services/MatchmakingBackendService';
 import { useScreenMoodGradient } from '../../hooks/useMoodGradient';
 import MoodAnalysisService from '../../services/MoodAnalysisService';
@@ -55,6 +57,11 @@ export default function SoulChatScreen({ navigation, route }) {
   const [showMemoryInsights, setShowMemoryInsights] = useState(false);
   const [enhancedSoulAIInitialized, setEnhancedSoulAIInitialized] = useState(false);
   
+  // 🧠 Learning Consent state
+  const [showConsentPopup, setShowConsentPopup] = useState(false);
+  const [userId] = useState('demo_user_001'); // TODO: Get from auth context
+  const [learningEnabled, setLearningEnabled] = useState(true);
+  
   const flatListRef = useRef(null);
   const typingAnimation = useRef(new Animated.Value(0)).current;
 
@@ -65,12 +72,20 @@ export default function SoulChatScreen({ navigation, route }) {
 
   const initializeServices = async () => {
     try {
-      console.log('🚀 Initializing SoulAI services (Enhanced + Matchmaking)...');
+      console.log('🚀 Initializing SoulAI services (Enhanced + Matchmaking + Learning)...');
       setIsInitializing(true);
       
-      // Initialize Enhanced SoulAI Service first
+      // 🧠 Check learning consent first
+      console.log('🧠 Checking learning consent...');
+      const needsConsent = learningConsentManager.needsConsentPopup(userId);
+      if (needsConsent) {
+        console.log('📋 User needs to provide learning consent');
+        setShowConsentPopup(true);
+      }
+      
+      // Initialize Enhanced SoulAI Service
       console.log('🧠 Initializing Enhanced SoulAI Service...');
-      const enhancedInit = await EnhancedSoulAIService.initialize('user_001');
+      const enhancedInit = await EnhancedSoulAIService.initialize(userId);
       
       if (enhancedInit.success) {
         console.log('✅ Enhanced SoulAI Service initialized successfully');
@@ -188,6 +203,23 @@ export default function SoulChatScreen({ navigation, route }) {
       typingAnimation.setValue(0);
     }
   }, [isAIThinking]);
+
+  // 🧠 Handle learning consent completion
+  const handleConsentComplete = useCallback((updatedConfig) => {
+    console.log('🧠 Learning consent completed:', updatedConfig);
+    setShowConsentPopup(false);
+    setLearningEnabled(updatedConfig.consentGiven !== false);
+    
+    // Log learning activity if enabled
+    if (updatedConfig.consentGiven !== false) {
+      learningConsentManager.logLearningActivity(
+        userId,
+        'consentGiven',
+        { consentResponse: updatedConfig },
+        { userAcceptedLearning: true, timestamp: Date.now() }
+      );
+    }
+  }, [userId]);
 
   // Send message function with matchmaking integration
   const handleSend = useCallback(async () => {
@@ -1068,6 +1100,13 @@ export default function SoulChatScreen({ navigation, route }) {
           </TouchableOpacity>
         </Modal>
       )}
+
+      {/* 🧠 Learning Consent Popup */}
+      <LearningConsentPopup
+        userId={userId}
+        visible={showConsentPopup}
+        onConsentComplete={handleConsentComplete}
+      />
     </SafeAreaView>
   );
 }

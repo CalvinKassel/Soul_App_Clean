@@ -53,7 +53,7 @@ class ChatGPTService {
   }
 
   constructor() {
-    this.apiKey = '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';
+    this.apiKey = process.env.EXPO_PUBLIC_OPENAI_API_KEY;
     this.baseUrl = 'https://api.openai.com/v1/chat/completions';
     console.log('ChatGPTService initialized:', { 
       hasApiKey: !!this.apiKey, 

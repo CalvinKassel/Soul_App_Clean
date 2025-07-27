@@ -6,7 +6,7 @@
  * and HHC-based compatibility matching.
  */
 
-const API_BASE_URL = 'http://localhost:3001/api';
+import ApiService from '../api/ApiService';
 
 export class MatchmakingBackendService {
   constructor() {
@@ -72,19 +72,21 @@ export class MatchmakingBackendService {
    */
   async ensureUserExists(userId, userProfile) {
     try {
-      // Check if user exists
-      const response = await fetch(`${API_BASE_URL}/users/profile/${userId}`, {
-        method: 'GET',
-        headers: { 'Content-Type': 'application/json' }
-      });
+      // Check if user exists using ApiService
+      const profileResponse = await ApiService.request(`/api/users/profile/${userId}`);
       
-      if (response.status === 404) {
-        // User doesn't exist, create them
+      // If response indicates offline mode, skip backend user creation
+      if (profileResponse?.offline) {
+        console.log('📱 Backend offline - skipping user creation, working in local mode');
+        return;
+      }
+      
+      // If user doesn't exist, create them
+      if (profileResponse?.error === 'USER_NOT_FOUND' || !profileResponse) {
         console.log('👤 Creating new user in backend:', userId);
         
-        const createResponse = await fetch(`${API_BASE_URL}/users`, {
+        const createResponse = await ApiService.request('/api/users', {
           method: 'POST',
-          headers: { 'Content-Type': 'application/json' },
           body: JSON.stringify({
             userData: {
               email: `${userId}@soulai.app`, // Mock email
@@ -97,19 +99,23 @@ export class MatchmakingBackendService {
           })
         });
         
-        if (!createResponse.ok) {
+        if (createResponse?.offline) {
+          console.log('📱 Backend offline - user creation skipped');
+          return;
+        }
+        
+        if (createResponse?.error) {
           throw new Error('Failed to create user in backend');
         }
         
         console.log('✅ User created successfully');
-      } else if (!response.ok) {
-        throw new Error('Failed to check user existence');
       } else {
         console.log('✅ User already exists in backend');
       }
       
     } catch (error) {
       console.error('Error ensuring user exists:', error);
+      console.log('💡 Continuing in offline mode - app functionality preserved');
       // Continue anyway - we can work with cached data
     }
   }
@@ -123,9 +129,8 @@ export class MatchmakingBackendService {
     try {
       console.log('🔢 Checking HHC vector for user:', userId);
       
-      const response = await fetch(`${API_BASE_URL}/users/profile/${userId}/hhc/generate`, {
+      const response = await ApiService.request(`/api/users/profile/${userId}/hhc/generate`, {
         method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({
           initialData: {
             bigFive: userProfile.bigFive,
@@ -160,10 +165,7 @@ export class MatchmakingBackendService {
     try {
       console.log(`🎯 Getting ${count} recommendations for user:`, userId);
       
-      const response = await fetch(`${API_BASE_URL}/recommendations/${userId}?count=${count}`, {
-        method: 'GET',
-        headers: { 'Content-Type': 'application/json' }
-      });
+      const response = await ApiService.request(`/api/recommendations/${userId}?count=${count}`);
       
       if (!response.ok) {
         console.log('⚠️ Recommendations API not available, using fallback');
@@ -204,9 +206,8 @@ export class MatchmakingBackendService {
         metadata.changeOfMind = true;
       }
       
-      const response = await fetch(`${API_BASE_URL}/interactions/like`, {
+      const response = await ApiService.request('/api/interactions/like', {
         method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({
           likingUserId: this.currentUserId,
           likedUserId: likedUserId,
@@ -272,9 +273,8 @@ export class MatchmakingBackendService {
     try {
       console.log('👎 Processing pass:', this.currentUserId, '->', passedUserId);
       
-      const response = await fetch(`${API_BASE_URL}/interactions/pass`, {
+      const response = await ApiService.request('/api/interactions/pass', {
         method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({
           passingUserId: this.currentUserId,
           passedUserId: passedUserId,
@@ -319,10 +319,7 @@ export class MatchmakingBackendService {
    */
   async getMatches(userId) {
     try {
-      const response = await fetch(`${API_BASE_URL}/interactions/matches/${userId}`, {
-        method: 'GET',
-        headers: { 'Content-Type': 'application/json' }
-      });
+      const response = await ApiService.request(`/api/interactions/matches/${userId}`);
       
       if (!response.ok) {
         return [];
@@ -354,10 +351,7 @@ export class MatchmakingBackendService {
         }
       }
       
-      const response = await fetch(`${API_BASE_URL}/users/profile/${userId}/public`, {
-        method: 'GET',
-        headers: { 'Content-Type': 'application/json' }
-      });
+      const response = await ApiService.request(`/api/users/profile/${userId}/public`);
       
       if (!response.ok) {
         return null;
@@ -704,10 +698,7 @@ export class MatchmakingBackendService {
    */
   async getRecommendationCount(userId) {
     try {
-      const response = await fetch(`${API_BASE_URL}/recommendations/${userId}/preview?count=10`, {
-        method: 'GET',
-        headers: { 'Content-Type': 'application/json' }
-      });
+      const response = await ApiService.request(`/api/recommendations/${userId}/preview?count=10`);
       
       if (!response.ok) {
         return 3; // Fallback count

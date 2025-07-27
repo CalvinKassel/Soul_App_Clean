@@ -1,192 +1,75 @@
-import { Platform } from 'react-native';
+// src/api/ApiService.js
+// A clean, centralized, and robust service for all API requests.
 
-// Configuration object for easy updates
-const CONFIG = {
-  // For development with ngrok (replace with your ngrok URL)
-  // In src/services/ApiService.js, update this line:
-NGROK_URL: 'https://abc123.ngrok.io', // Your ngrok URL from step 3
-  
-  // For production deployment
-  PRODUCTION_URL: 'https://your-production-api.com',
-  
-  // Current local IP (update this when your IP changes)
-  CURRENT_LOCAL_IP: '10.0.0.13', // Your current IP
-  
-  // Port your backend runs on
-  PORT: '3000'
-};
+import Constants from 'expo-constants';
 
-// Dynamic IP detection for local development
-const getLocalBackendURL = () => {
-  if (Platform.OS === 'android') {
-    // Android emulator uses this special IP
-    return 'http://10.0.2.2:' + CONFIG.PORT;
-  }
-  
-  if (Platform.OS === 'ios') {
-    // iOS simulator can use localhost
-    return 'http://localhost:' + CONFIG.PORT;
-  }
-  
-  // For physical devices, use your current IP
-  return `http://${CONFIG.CURRENT_LOCAL_IP}:${CONFIG.PORT}`;
-};
+// --- CONFIGURATION ---
+// This automatically determines the correct IP address for your backend.
+// It uses your computer's LAN IP address when running in development via Expo Go
+// and falls back to a production URL.
+const { manifest } = Constants;
+const localApiUrl = `http://${manifest?.debuggerHost?.split(':').shift()}:3000`;
+const PRODUCTION_API_URL = 'https://your-production-backend-url.com'; // TODO: Replace this later
 
-// Smart URL selection
-const API_BASE_URL = (() => {
-  if (__DEV__) {
-    // Development mode
-    if (CONFIG.NGROK_URL && CONFIG.NGROK_URL.startsWith('https://')) {
-      console.log('🌐 Using ngrok tunnel for development');
-      return CONFIG.NGROK_URL;
-    }
-    
-    const localURL = getLocalBackendURL();
-    console.log('🏠 Using local development server');
-    return localURL;
-  }
-  
-  // Production mode
-  console.log('☁️ Using production server');
-  return CONFIG.PRODUCTION_URL;
-})();
+// Use the local URL in development, otherwise use the production URL.
+const API_BASE_URL = (manifest?.releaseChannel) ? PRODUCTION_API_URL : localApiUrl;
 
-class ApiService {
-  constructor() {
-    this.baseURL = API_BASE_URL;
-    console.log(`🌐 API Base URL: ${this.baseURL}`);
-    console.log(`📱 Platform: ${Platform.OS}`);
-    console.log(`🚀 Environment: ${__DEV__ ? 'Development' : 'Production'}`);
-  }
+console.log(`🌐 API Base URL configured to: ${API_BASE_URL}`);
 
-  async request(endpoint, options = {}) {
-    const url = `${this.baseURL}${endpoint}`;
-    
-    const config = {
+/**
+ * A wrapper around the fetch API to handle common tasks like setting headers,
+ * managing timeouts, and parsing responses.
+ *
+ * @param {string} endpoint - The API endpoint to call (e.g., '/api/health').
+ * @param {object} options - The options object for the fetch call (method, body, etc.).
+ * @param {number} timeout - The request timeout in milliseconds.
+ * @returns {Promise<any>} The JSON response from the API.
+ */
+const request = async (endpoint, options = {}, timeout = 15000) => { // 15-second timeout
+  const controller = new AbortController();
+  const timeoutId = setTimeout(() => controller.abort(), timeout);
+
+  try {
+    const response = await fetch(`${API_BASE_URL}${endpoint}`, {
+      ...options,
       headers: {
         'Content-Type': 'application/json',
+        'Accept': 'application/json',
         ...options.headers,
       },
-      ...options,
-    };
+      signal: controller.signal,
+    });
 
-    try {
-      console.log(`🌐 API Request: ${config.method || 'GET'} ${url}`);
-      
-      const response = await fetch(url, config);
-      
-      if (!response.ok) {
-        throw new Error(`HTTP error! status: ${response.status}`);
-      }
-      
-      const data = await response.json();
-      console.log(`✅ API Response received`);
-      
-      return data;
-    } catch (error) {
-      console.error(`❌ API Error for ${endpoint}:`, error.message);
-      
-      // Enhanced error handling with suggestions
-      if (error.message.includes('Network request failed')) {
-        console.log('💡 Network Error Suggestions:');
-        console.log('1. Check if backend is running: npm run dev');
-        console.log('2. Verify IP address in CONFIG.CURRENT_LOCAL_IP');
-        console.log('3. Try using ngrok for tunneling');
-        console.log(`4. Current base URL: ${this.baseURL}`);
-      }
-      
-      throw error;
+    clearTimeout(timeoutId);
+
+    if (!response.ok) {
+      // If we get an error response, try to parse it for more info
+      const errorBody = await response.json().catch(() => ({ message: response.statusText }));
+      throw new Error(errorBody.message || `API request failed with status ${response.status}`);
     }
-  }
 
-  // Test connection method
-  async testConnection() {
-    try {
-      console.log('🔍 Testing backend connection...');
-      const response = await this.checkHealth();
-      console.log('✅ Backend connection successful!', response);
-      return true;
-    } catch (error) {
-      console.error('❌ Backend connection failed:', error.message);
-      return false;
+    // If the response is successful but has no content (e.g., a 204 response)
+    const contentType = response.headers.get('content-type');
+    if (!contentType || !contentType.includes('application/json')) {
+      return null;
     }
-  }
+    
+    return response.json();
 
-  // Health check
-  async checkHealth() {
-    return this.request('/health');
+  } catch (error) {
+    clearTimeout(timeoutId);
+    if (error.name === 'AbortError') {
+      console.error(`API Error: Request to ${endpoint} timed out after ${timeout}ms`);
+      throw new Error('NETWORK_TIMEOUT');
+    }
+    console.error(`API Error for ${endpoint}:`, error.message);
+    throw new Error('NETWORK_UNAVAILABLE');
   }
+};
 
-  // Compatibility Analysis
-  async analyzeCompatibility(user1Profile, user2Profile) {
-    return this.request('/api/compatibility/analyze', {
-      method: 'POST',
-      body: JSON.stringify({
-        user1Profile,
-        user2Profile
-      }),
-    });
-  }
-
-  // Chat response suggestions
-  async suggestChatResponse(userProfile, matchProfile, conversationHistory = [], lastMessage = '') {
-    return this.request('/api/chat/suggest-response', {
-      method: 'POST',
-      body: JSON.stringify({
-        userProfile,
-        matchProfile,
-        conversationHistory,
-        lastMessage
-      }),
-    });
-  }
-
-  // New V2 endpoint for enhanced conversations
-  async soulConversationV2(userInput, conversationHistory, userProfile, matchingStatus) {
-    return this.request('/api/chat/soul-conversation-v2', {
-      method: 'POST',
-      body: JSON.stringify({
-        userInput,
-        conversationHistory,
-        userProfile,
-        matchingStatus
-      }),
-    });
-  }
-
-  // V3 endpoint for the latest multi-agent system
-  async soulConversationV3(userInput, conversationHistory, userProfile, currentStage) {
-    return this.request('/api/chat/soul-conversation-v3', {
-      method: 'POST',
-      body: JSON.stringify({
-        userInput,
-        conversationHistory,
-        userProfile,
-        currentStage
-      }),
-    });
-  }
-
-  // Profile learning endpoints
-  async analyzeConversation(conversationHistory, currentProfile) {
-    return this.request('/api/learning/analyze-conversation', {
-      method: 'POST',
-      body: JSON.stringify({
-        conversationHistory,
-        currentProfile
-      }),
-    });
-  }
-
-  async suggestQuestions(currentProfile, conversationHistory) {
-    return this.request('/api/learning/suggest-questions', {
-      method: 'POST',
-      body: JSON.stringify({
-        currentProfile,
-        conversationHistory
-      }),
-    });
-  }
-}
-
-export default new ApiService();
+// --- NAMED EXPORTS ---
+// We use named exports to be explicit about which functions are available.
+export const get = (endpoint, options) => request(endpoint, { method: 'GET', ...options });
+export const post = (endpoint, body, options) => request(endpoint, { method: 'POST', body: JSON.stringify(body), ...options });
+export const put = (endpoint, body, options) => request(endpoint, { method: 'PUT', body: JSON.stringify(body), ...options });
+// Add other methods like DEL etc. as needed.

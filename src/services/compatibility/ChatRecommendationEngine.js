@@ -314,6 +314,32 @@ export class ChatRecommendationEngine {
   }
 
   /**
+   * Handle neutral or unclear responses
+   */
+  async handleNeutralResponse(feedback) {
+    const messages = [];
+    
+    // Acknowledge the input
+    messages.push({
+      type: MESSAGE_TYPES.CLARIFICATION,
+      content: "I'd love to help you better! Could you tell me more about what you're looking for?",
+      timestamp: Date.now()
+    });
+
+    // If we have a current candidate, offer to explain more
+    if (this.conversationState.currentCandidate) {
+      messages.push({
+        type: MESSAGE_TYPES.SUGGESTION,
+        content: "Or would you like me to tell you more about this person, or show you someone different?",
+        options: ['Tell me more', 'Someone different', 'Keep exploring'],
+        timestamp: Date.now()
+      });
+    }
+
+    return messages;
+  }
+
+  /**
    * Handle user questions
    */
   async handleQuestion(feedback) {
@@ -561,21 +587,21 @@ export class ChatRecommendationEngine {
    * Generate welcome message
    */
   generateWelcomeMessage() {
-    const completeness = this.calculateProfileCompleteness();
+    // Start with conversational greeting, not matchmaking focus
+    const conversationalGreetings = [
+      "Hi! I'm SoulAI, and I love getting to know people through meaningful conversations. What's been on your mind lately?",
+      "Hello! I'm SoulAI, your thoughtful companion. I'm here to listen and engage with whatever you'd like to discuss. What interests you?",
+      "Hey there! I'm SoulAI, and I believe great relationships start with understanding ourselves and others. What would you like to explore?",
+      "Hi! I'm SoulAI, and I'm fascinated by what makes people tick. What's something you've been thinking about recently?"
+    ];
     
-    if (completeness < 0.5) {
-      return {
-        type: MESSAGE_TYPES.CLARIFICATION,
-        content: "Hi! I'm Soul, your personal matchmaker. I'd love to learn more about you to find amazing connections. What kind of person are you hoping to meet?",
-        timestamp: Date.now()
-      };
-    } else {
-      return {
-        type: MESSAGE_TYPES.PROFILE_PRESENTATION,
-        content: `Hi! Based on what I know about you, I've found some really interesting people. Ready to meet them?`,
-        timestamp: Date.now()
-      };
-    }
+    const randomGreeting = conversationalGreetings[Math.floor(Math.random() * conversationalGreetings.length)];
+    
+    return {
+      type: MESSAGE_TYPES.CLARIFICATION,
+      content: randomGreeting,
+      timestamp: Date.now()
+    };
   }
 
   /**
@@ -823,5 +849,40 @@ export class ChatRecommendationEngine {
     ];
     
     return responses[Math.floor(Math.random() * responses.length)];
+  }
+
+  /**
+   * Generate compatibility insight for a specific factor
+   */
+  generateCompatibilityInsight(factor) {
+    if (!factor) return "This creates a really interesting dynamic between you two.";
+    
+    const insights = {
+      personality: [
+        "Your personality types complement each other beautifully.",
+        "I see some really interesting personality synergies here.",
+        "Your different personality strengths could balance each other out perfectly."
+      ],
+      values: [
+        "You both seem to value the same important things in life.",
+        "Your core values align in ways that matter for long-term compatibility.",
+        "This shared value system could be the foundation of something special."
+      ],
+      communication: [
+        "Your communication styles seem to flow naturally together.",
+        "I think you'd have really engaging conversations.",
+        "Your different communication approaches could create great chemistry."
+      ],
+      lifestyle: [
+        "Your lifestyles seem compatible in all the right ways.",
+        "I see potential for some fun adventures together.",
+        "Your different lifestyle preferences could complement each other nicely."
+      ]
+    };
+    
+    const categoryKey = factor.category?.toLowerCase() || 'personality';
+    const categoryInsights = insights[categoryKey] || insights.personality;
+    
+    return categoryInsights[Math.floor(Math.random() * categoryInsights.length)];
   }
 }

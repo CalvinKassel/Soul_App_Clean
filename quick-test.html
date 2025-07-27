@@ -1,0 +1,23 @@
+<!DOCTYPE html>
+<html>
+<head><title>Quick Test</title></head>
+<body>
+    <h1>SoulAI Test</h1>
+    <button onclick="test()">Test Backend</button>
+    <div id="result"></div>
+    
+    <script>
+        async function test() {
+            document.getElementById('result').innerHTML = 'Testing...';
+            
+            try {
+                const response = await fetch('http://localhost:3001/health');
+                const data = await response.json();
+                document.getElementById('result').innerHTML = 'SUCCESS: ' + JSON.stringify(data);
+            } catch (error) {
+                document.getElementById('result').innerHTML = 'ERROR: ' + error.message;
+            }
+        }
+    </script>
+</body>
+</html>

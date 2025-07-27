@@ -296,7 +296,7 @@ class BaseExecutive {
 
   async synthesize(workerInsights, consensusWeights) {
     // Simplified synthesis - in a real implementation this would be more sophisticated
-    const insights = workerInsights.filter(insight => insight.confidence > 0.5);
+    const insights = Object.values(workerInsights || {}).filter(insight => insight && insight.confidence > 0.5);
     
     if (insights.length === 0) {
       return {

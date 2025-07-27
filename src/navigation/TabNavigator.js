@@ -3,12 +3,13 @@ import React from 'react';
 import { createBottomTabNavigator } from '@react-navigation/bottom-tabs';
 import { createNativeStackNavigator } from '@react-navigation/native-stack';
 
-// Import screens based on your current structure
+// Import screens based on your current structure  
 import SoulChatScreen from '../screens/chat/SoulChatScreen';
 import ListScreen from '../screens/matches/ListScreen';
 import ProfileScreen from '../screens/profile/ProfileScreen';
 import MatchChatScreen from '../screens/chat/MatchChatScreen';
 import MatchProfileScreen from '../screens/matches/MatchProfileScreen';
+import VertexAITestScreen from '../screens/test/VertexAITestScreen';
 // import DiscoveryScreen from '../screens/discovery/DiscoveryScreen'; // REMOVED - Discovery screen disabled
 
 const Tab = createBottomTabNavigator();
@@ -52,6 +53,11 @@ function TabNavigator() {
       <Tab.Screen 
         name="ProfileScreen" 
         component={ProfileScreen}
+      />
+      <Tab.Screen 
+        name="VertexAITest" 
+        component={VertexAITestScreen}
+        options={{ title: '🤖 AI Test' }}
       />
     </Tab.Navigator>
   );

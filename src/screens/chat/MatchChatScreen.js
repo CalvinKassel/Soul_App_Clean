@@ -271,11 +271,11 @@ export default function MatchChatScreen({ navigation, route }) {
         </LinearGradient>
       </View>
 
-      {/* Chat Container - Split screen when AI assistant is open */}
+      {/* Chat Container - Improved layout */}
       <KeyboardAvoidingView
         style={styles.chatContainer}
         behavior={Platform.OS === 'ios' ? 'padding' : 'height'}
-        keyboardVerticalOffset={Platform.OS === 'ios' ? 0 : 20}
+        keyboardVerticalOffset={Platform.OS === 'ios' ? 88 : 0}
       >
         <Animated.View style={[styles.messagesContainer, moodGradient.getAnimatedGradientStyle()]}>
           <LinearGradient
@@ -300,42 +300,42 @@ export default function MatchChatScreen({ navigation, route }) {
             }}
             ListFooterComponent={renderTypingIndicator}
           />
-
-          {/* Input container - Enhanced with working AI Helper button */}
-          <View style={styles.inputContainer}>
-            <View style={styles.inputPill}>
-              <TouchableOpacity 
-                onPress={() => setIsAIHelperVisible(true)}
-                style={styles.aiHelperButton}
-              >
-                <SparklesIcon size={20} color={COLORS.primary} />
-              </TouchableOpacity>
-              <TextInput
-                style={[styles.input, styles.inputFont]}
-                value={input}
-                onChangeText={setInput}
-                placeholder={`Message ${match.name}...`}
-                placeholderTextColor={COLORS.textPlaceholder}
-                multiline
-                returnKeyType="send"
-                onSubmitEditing={handleSend}
-                blurOnSubmit={false}
-                includeFontPadding={false}
-                textAlignVertical="center"
-              />
-              <TouchableOpacity
-                onPress={handleSend}
-                style={[
-                  styles.sendButton, 
-                  !input.trim() && styles.disabledButton
-                ]}
-                disabled={!input.trim()}
-              >
-                <Ionicons name="send" size={22} color="#FFFFFF" />
-              </TouchableOpacity>
-            </View>
-          </View>
         </Animated.View>
+
+        {/* Input container - Fixed positioning */}
+        <View style={styles.inputContainer}>
+          <View style={styles.inputPill}>
+            <TouchableOpacity 
+              onPress={() => setIsAIHelperVisible(true)}
+              style={styles.aiHelperButton}
+            >
+              <SparklesIcon size={20} color={COLORS.primary} />
+            </TouchableOpacity>
+            <TextInput
+              style={[styles.input, styles.inputFont]}
+              value={input}
+              onChangeText={setInput}
+              placeholder={`Message ${match.name}...`}
+              placeholderTextColor={COLORS.textPlaceholder}
+              multiline
+              returnKeyType="send"
+              onSubmitEditing={handleSend}
+              blurOnSubmit={false}
+              includeFontPadding={false}
+              textAlignVertical="center"
+            />
+            <TouchableOpacity
+              onPress={handleSend}
+              style={[
+                styles.sendButton, 
+                !input.trim() && styles.disabledButton
+              ]}
+              disabled={!input.trim()}
+            >
+              <Ionicons name="send" size={22} color="#FFFFFF" />
+            </TouchableOpacity>
+          </View>
+        </View>
 
         {/* Mini Soul Chat Overlay */}
         <MiniSoulChat
@@ -428,7 +428,7 @@ const styles = StyleSheet.create({
     padding: 4,
   },
   soulHeading: {
-    fontSize: 26,
+    fontSize: 28,
     fontWeight: 'bold',
     color: '#4A90E2',
     letterSpacing: 1
@@ -453,7 +453,7 @@ const styles = StyleSheet.create({
   },
   messagesContent: {
     padding: 16,
-    paddingBottom: 80,
+    paddingBottom: 20,
   },
 
   // Message Styles - Enhanced for dark gradient background
@@ -504,15 +504,11 @@ const styles = StyleSheet.create({
     fontWeight: '400',
   },
 
-  // Input Styles - Enhanced for dark gradient background
+  // Input Styles - Fixed layout
   inputContainer: {
     paddingHorizontal: 16,
     paddingVertical: 12,
     backgroundColor: 'transparent',
-    position: 'absolute',
-    bottom: 0,
-    left: 0,
-    right: 0,
   },
   inputPill: {
     flexDirection: 'row',

@@ -1,0 +1,13 @@
+
+> soul-app-clean@1.0.0 start
+> expo start
+
+env: load .env
+env: export EXPO_PUBLIC_OPENAI_API_KEY EXPO_PUBLIC_ANTHROPIC_API_KEY EXPO_PUBLIC_AI_MODEL EXPO_PUBLIC_AI_MAX_TOKENS EXPO_PUBLIC_AI_TEMPERATURE
+Starting project at /Users/calvinkassel/Desktop/SoulAI/SoulAppClean
+› Port 8081 is running this app in another window
+  /Users/calvinkassel/Desktop/SoulAI/SoulAppClean (pid 66454)
+Input is required, but 'npx expo' is in non-interactive mode.
+Required input:
+> Use port 8082 instead?
+› Skipping dev server

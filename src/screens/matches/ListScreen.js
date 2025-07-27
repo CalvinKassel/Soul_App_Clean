@@ -5,7 +5,6 @@ import {
   Text,
   StyleSheet,
   TouchableOpacity,
-  TextInput,
   Image,
   Alert,
   ScrollView
@@ -13,21 +12,19 @@ import {
 import { LinearGradient } from 'expo-linear-gradient';
 import { Ionicons } from '@expo/vector-icons';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
-import { COLORS, GRADIENTS, NIGHT_COLORS } from '../../styles/globalStyles';
+import { COLORS, GRADIENTS } from '../../styles/globalStyles';
 import DropdownSection from '../../components/DropdownSection';
-import MatchOptionsMenu, { HamburgerMenuButton } from '../../components/MatchOptionsMenu';
+import MatchOptionsMenu from '../../components/MatchOptionsMenu';
 import MatchmakingBackendService from '../../services/MatchmakingBackendService';
 
 export default function ListScreen({ navigation }) {
   const insets = useSafeAreaInsets();
-  const [searchText, setSearchText] = useState('');
   const [selectedMenuMatch, setSelectedMenuMatch] = useState(null);
   const [isMenuVisible, setIsMenuVisible] = useState(false);
   const [matchesData, setMatchesData] = useState([]);
   const [waitingCount, setWaitingCount] = useState(0);
   const [servedRecommendations, setServedRecommendations] = useState([]);
   const [userMatches, setUserMatches] = useState([]);
-  const [nightMode, setNightMode] = useState(false);
 
   // Load waiting recommendations count, served recommendations, and user matches
   useEffect(() => {
@@ -143,21 +140,11 @@ export default function ListScreen({ navigation }) {
   const pendingMatches = matchesData.filter(match => match.category === 'pending');
   const archivedChats = matchesData.filter(match => match.category === 'archived');
   
-  // Filter by search text
-  const filteredActiveMatches = activeMatches.filter(match =>
-    match.name.toLowerCase().includes(searchText.toLowerCase())
-  );
-  const filteredPendingMatches = pendingMatches.filter(match =>
-    match.name.toLowerCase().includes(searchText.toLowerCase())
-  );
-  const filteredArchivedChats = archivedChats.filter(match =>
-    match.name.toLowerCase().includes(searchText.toLowerCase())
-  );
-  
-  // Filter served recommendations by search text
-  const filteredServedRecommendations = servedRecommendations.filter(rec =>
-    (rec.name || rec.displayName || '').toLowerCase().includes(searchText.toLowerCase())
-  );
+  // No search filtering needed - show all matches
+  const filteredActiveMatches = activeMatches;
+  const filteredPendingMatches = pendingMatches;
+  const filteredArchivedChats = archivedChats;
+  const filteredServedRecommendations = servedRecommendations;
 
   // Menu handlers
   const handleMenuOpen = (match) => {
@@ -235,7 +222,7 @@ export default function ListScreen({ navigation }) {
         fromMatch: true 
       });
     } else {
-      // Navigate to chat for active matches
+      // Navigate to chat for active matches - force to MatchChat
       navigation?.navigate?.('MatchChat', { match });
     }
   };
@@ -248,19 +235,6 @@ export default function ListScreen({ navigation }) {
     });
   };
 
-  // Waiting for you header component
-  const renderWaitingForYouHeader = () => {
-    if (waitingCount === 0) return null;
-    
-    return (
-      <View style={styles.waitingHeader}>
-        <Text style={styles.waitingHeaderText}>Waiting for you</Text>
-        <View style={styles.countBadge}>
-          <Text style={styles.countBadgeText}>{waitingCount}</Text>
-        </View>
-      </View>
-    );
-  };
 
   const renderMatchItem = ({ item }) => {
     return (
@@ -272,36 +246,12 @@ export default function ListScreen({ navigation }) {
         <View style={styles.matchContent}>
           <Image source={{ uri: item.photo }} style={styles.matchPhoto} />
           <View style={styles.matchInfo}>
-            <View style={styles.matchHeader}>
-              <Text style={styles.matchName}>{item.name}</Text>
-              <Text style={styles.matchAge}>{item.age}</Text>
-            </View>
-            <View style={styles.matchMessage}>
-              <Text 
-                style={[
-                  styles.lastMessage, 
-                  item.unreadCount > 0 && styles.unreadMessage
-                ]} 
-                numberOfLines={1}>
-                {item.lastMessage}
-              </Text>
-            </View>
-            <View style={styles.matchMeta}>
-              <Text style={styles.timestamp}>{item.timestamp}</Text>
-              {item.unreadCount > 0 && (
-                <View style={styles.unreadBadge}>
-                  <Text style={styles.unreadText}>{item.unreadCount}</Text>
-                </View>
-              )}
-            </View>
+            <Text style={styles.matchName}>{item.name}</Text>
           </View>
-          {item.category !== 'pending' && (
-            <TouchableOpacity 
-              onPress={() => handleMenuOpen(item)}
-              style={styles.menuButtonContainer}
-            >
-              <HamburgerMenuButton />
-            </TouchableOpacity>
+          {item.unreadCount > 0 && (
+            <View style={styles.unreadBadge}>
+              <Text style={styles.unreadText}>{item.unreadCount}</Text>
+            </View>
           )}
         </View>
       </TouchableOpacity>
@@ -351,10 +301,10 @@ export default function ListScreen({ navigation }) {
           </View>
           {/* Like button for Potentials */}
           <TouchableOpacity
-            style={[styles.likeButton, nightMode ? { backgroundColor: NIGHT_COLORS.auroraGreen } : { backgroundColor: COLORS.primary }]}
+            style={[styles.likeButton, { backgroundColor: COLORS.primary }]}
             onPress={() => handleLikePotential(item)}
           >
-            <Text style={{ color: nightMode ? NIGHT_COLORS.nightBlack : COLORS.textWhite, fontWeight: 'bold' }}>Like</Text>
+            <Text style={{ color: COLORS.textWhite, fontWeight: 'bold' }}>Like</Text>
           </TouchableOpacity>
         </View>
       </TouchableOpacity>
@@ -374,46 +324,26 @@ export default function ListScreen({ navigation }) {
 
   return (
     <SafeAreaView style={styles.container}>
-      {/* Header with gradient background and night mode toggle */}
+      {/* Header with gradient background - match SoulChatScreen exactly */}
       <View style={styles.headerShadow}>
         <LinearGradient
-          colors={nightMode ? GRADIENTS.northernLights : GRADIENTS.header}
+          colors={GRADIENTS.header}
           start={{ x: 0, y: 0 }}
           end={{ x: 1, y: 0 }}
           style={[styles.header, { paddingTop: insets.top + 10 }]}
         >
           <Text style={styles.soulHeading}>Soul</Text>
-          <TouchableOpacity
-            style={{ marginLeft: 'auto', padding: 8 }}
-            onPress={() => setNightMode(n => !n)}
-          >
-            <Ionicons name={nightMode ? 'moon' : 'sunny'} size={24} color={nightMode ? NIGHT_COLORS.auroraGreen : COLORS.primary} />
-          </TouchableOpacity>
         </LinearGradient>
       </View>
       {/* Content Container with gradient background */}
       <LinearGradient
-        colors={nightMode ? GRADIENTS.northernLights : GRADIENTS.cottonCandyMain}
+        colors={GRADIENTS.cottonCandyMain}
         locations={[0, 0.33, 0.66, 1]}
         start={{ x: 0, y: 0 }}
         end={{ x: 1, y: 1 }}
         style={styles.contentContainer}
       >
 
-        {/* Search Bar */}
-        <View style={styles.searchContainer}>
-          <Ionicons name="search" size={20} color="rgba(255, 255, 255, 0.7)" style={styles.searchIcon} />
-          <TextInput
-            style={styles.searchInput}
-            placeholder="Search matches..."
-            placeholderTextColor="rgba(255, 255, 255, 0.6)"
-            value={searchText}
-            onChangeText={setSearchText}
-          />
-        </View>
-
-        {/* Waiting for You Header */}
-        {renderWaitingForYouHeader()}
 
         {/* Matches List with Dropdown Sections */}
         <ScrollView
@@ -421,7 +351,7 @@ export default function ListScreen({ navigation }) {
           showsVerticalScrollIndicator={false}
           contentContainerStyle={styles.matchesListContent}
         >
-          {/* Active Matches Section */}
+          {/* 1. Active Matches Section */}
           <DropdownSection 
             title="Matches" 
             count={filteredActiveMatches.length} 
@@ -434,33 +364,7 @@ export default function ListScreen({ navigation }) {
             ))}
           </DropdownSection>
 
-          {/* Potentials Section - SoulAI Served Recommendations */}
-          <DropdownSection 
-            title="Potentials" 
-            count={filteredServedRecommendations.length} 
-            defaultExpanded={false}
-          >
-            {filteredServedRecommendations.map(recommendation => (
-              <View key={recommendation.userId}>
-                {renderRecommendationItem({ item: recommendation })}
-              </View>
-            ))}
-          </DropdownSection>
-
-          {/* Pending Matches Section */}
-          <DropdownSection 
-            title="Pending Matches" 
-            count={filteredPendingMatches.length} 
-            defaultExpanded={false}
-          >
-            {filteredPendingMatches.map(match => (
-              <View key={match.id}>
-                {renderMatchItem({ item: match })}
-              </View>
-            ))}
-          </DropdownSection>
-
-          {/* Archived Chats Section */}
+          {/* 2. Archived Chats Section */}
           <DropdownSection 
             title="Archived" 
             count={filteredArchivedChats.length} 
@@ -472,12 +376,60 @@ export default function ListScreen({ navigation }) {
               </View>
             ))}
           </DropdownSection>
+
+          {/* 3. Waiting for You Section - Shows recommendations to like/pass */}
+          <DropdownSection 
+            title="Waiting for You" 
+            count={filteredServedRecommendations.length || waitingCount} 
+            defaultExpanded={true}
+          >
+            {filteredServedRecommendations.length > 0 ? (
+              filteredServedRecommendations.map(recommendation => (
+                <View key={recommendation.userId}>
+                  {renderRecommendationItem({ item: recommendation })}
+                </View>
+              ))
+            ) : (
+              <View style={styles.emptyWaitingSection}>
+                <Text style={styles.emptyWaitingText}>
+                  {waitingCount > 0 
+                    ? `${waitingCount} new recommendations are being prepared for you`
+                    : 'No new recommendations at the moment'
+                  }
+                </Text>
+                {waitingCount > 0 && (
+                  <TouchableOpacity 
+                    style={styles.refreshButton}
+                    onPress={() => {
+                      loadServedRecommendations();
+                      loadWaitingCount();
+                    }}
+                  >
+                    <Text style={styles.refreshButtonText}>Refresh</Text>
+                  </TouchableOpacity>
+                )}
+              </View>
+            )}
+          </DropdownSection>
+
+          {/* 4. Waiting for Them Section */}
+          <DropdownSection 
+            title="Waiting for Them" 
+            count={filteredPendingMatches.length} 
+            defaultExpanded={false}
+          >
+            {filteredPendingMatches.map(match => (
+              <View key={match.id}>
+                {renderMatchItem({ item: match })}
+              </View>
+            ))}
+          </DropdownSection>
         </ScrollView>
       </LinearGradient>
 
       {/* Fixed Bottom Toolbar - Full width gradient */}
       <LinearGradient
-        colors={nightMode ? GRADIENTS.northernLights : GRADIENTS.header}
+        colors={GRADIENTS.header}
         start={{ x: 0, y: 0 }}
         end={{ x: 1, y: 0 }}
         style={[styles.toolbarContainer, { paddingBottom: insets.bottom }]}
@@ -485,7 +437,7 @@ export default function ListScreen({ navigation }) {
         <View style={styles.toolbar}>
           <TouchableOpacity
             style={styles.toolbarIcon}
-            onPress={() => navigation?.getParent()?.navigate?.('SoulChatScreen')}
+            onPress={() => navigation?.navigate?.('SoulChatScreen')}
           >
             <View style={styles.iconContainer}>
               <Ionicons name="chatbubbles" size={24} color="rgba(255, 255, 255, 0.6)" />
@@ -493,7 +445,7 @@ export default function ListScreen({ navigation }) {
           </TouchableOpacity>
           <TouchableOpacity
             style={styles.toolbarIcon}
-            onPress={() => navigation?.navigate?.('MatchesStack')}
+            onPress={() => navigation?.navigate?.('ListScreen')}
           >
             <View style={[styles.iconContainer, styles.activeIcon]}>
               <Ionicons name="list" size={24} color="#4A2C6D" />
@@ -501,7 +453,7 @@ export default function ListScreen({ navigation }) {
           </TouchableOpacity>
           <TouchableOpacity
             style={styles.toolbarIcon}
-            onPress={() => navigation?.getParent()?.navigate?.('ProfileScreen')}
+            onPress={() => navigation?.navigate?.('ProfileScreen')}
           >
             <View style={styles.iconContainer}>
               <Ionicons name="person" size={24} color="rgba(255, 255, 255, 0.6)" />
@@ -554,28 +506,6 @@ const styles = StyleSheet.create({
     color: '#4A90E2',
     letterSpacing: 1
   },
-  searchContainer: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    backgroundColor: 'rgba(255, 255, 255, 0.15)',
-    marginHorizontal: 16,
-    marginTop: 16,
-    marginBottom: 8,
-    borderRadius: 12,
-    paddingHorizontal: 12,
-    paddingVertical: 8,
-    borderWidth: 1,
-    borderColor: 'rgba(255, 255, 255, 0.2)',
-  },
-  searchIcon: {
-    marginRight: 8,
-  },
-  searchInput: {
-    flex: 1,
-    fontSize: 16,
-    color: '#FFFFFF',
-    paddingVertical: 4,
-  },
   matchesList: {
     paddingHorizontal: 0,
     paddingBottom: 20,
@@ -591,17 +521,15 @@ const styles = StyleSheet.create({
   },
   matchContent: {
     flexDirection: 'row',
-    padding: 16,
+    paddingVertical: 12,
+    paddingHorizontal: 16,
     alignItems: 'center',
     backgroundColor: 'rgba(255, 255, 255, 0.05)',
     borderWidth: 1,
     borderColor: 'rgba(255, 255, 255, 0.2)',
     borderRadius: 16,
-    shadowColor: '#000',
-    shadowOffset: { width: 0, height: 2 },
-    shadowOpacity: 0.1,
-    shadowRadius: 4,
-    elevation: 2,
+    justifyContent: 'space-between',
+    minHeight: 76,
   },
   matchPhoto: {
     width: 60,
@@ -611,64 +539,26 @@ const styles = StyleSheet.create({
   },
   matchInfo: {
     flex: 1,
-  },
-  matchHeader: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    marginBottom: 4,
+    justifyContent: 'center',
   },
   matchName: {
     fontSize: 18,
     fontWeight: 'bold',
     color: '#FFFFFF',
-    marginRight: 8,
     textShadowColor: 'rgba(0, 0, 0, 0.3)',
     textShadowOffset: { width: 1, height: 1 },
     textShadowRadius: 2,
-    flex: 1,
-  },
-  matchAge: {
-    fontSize: 16,
-    color: 'rgba(255, 255, 255, 0.8)',
-    fontWeight: '500',
-    textShadowColor: 'rgba(0, 0, 0, 0.3)',
-    textShadowOffset: { width: 1, height: 1 },
-    textShadowRadius: 2,
-  },
-  matchMessage: {
-    marginBottom: 4,
-  },
-  lastMessage: {
-    fontSize: 14,
-    color: 'rgba(255, 255, 255, 0.9)',
-    lineHeight: 18,
-    textShadowColor: 'rgba(0, 0, 0, 0.3)',
-    textShadowOffset: { width: 1, height: 1 },
-    textShadowRadius: 2,
-  },
-  unreadMessage: {
-    fontWeight: '600',
-    color: '#FFFFFF',
-  },
-  matchMeta: {
-    flexDirection: 'row',
-    justifyContent: 'space-between',
-    alignItems: 'flex-end',
-  },
-  timestamp: {
-    fontSize: 12,
-    color: 'rgba(100, 100, 100, 0.9)',
-    marginBottom: 4,
   },
   unreadBadge: {
     backgroundColor: '#4A2C6D',
-    borderRadius: 10,
-    paddingHorizontal: 6,
-    paddingVertical: 2,
-    minWidth: 20,
+    borderRadius: 12,
+    paddingHorizontal: 8,
+    paddingVertical: 4,
+    minWidth: 24,
     alignItems: 'center',
     borderWidth: 1,
     borderColor: 'rgba(255, 255, 255, 0.3)',
+    marginLeft: 12,
   },
   unreadText: {
     color: '#FFFFFF',
@@ -758,6 +648,34 @@ const styles = StyleSheet.create({
     borderColor: 'rgba(255, 255, 255, 0.3)',
   },
   countBadgeText: {
+    color: '#FFFFFF',
+    fontSize: 14,
+    fontWeight: 'bold',
+  },
+  
+  // Empty waiting section styles
+  emptyWaitingSection: {
+    padding: 20,
+    alignItems: 'center',
+    backgroundColor: 'rgba(255, 255, 255, 0.05)',
+    borderRadius: 12,
+    margin: 8,
+  },
+  emptyWaitingText: {
+    fontSize: 16,
+    color: 'rgba(255, 255, 255, 0.8)',
+    textAlign: 'center',
+    marginBottom: 12,
+    lineHeight: 22,
+  },
+  refreshButton: {
+    backgroundColor: COLORS.primary,
+    paddingHorizontal: 20,
+    paddingVertical: 8,
+    borderRadius: 16,
+    alignItems: 'center',
+  },
+  refreshButtonText: {
     color: '#FFFFFF',
     fontSize: 14,
     fontWeight: 'bold',

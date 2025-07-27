@@ -7,8 +7,7 @@ import {
   ScrollView,
   TouchableOpacity,
   Image,
-  TextInput,
-  Modal
+  TextInput
 } from 'react-native';
 import { LinearGradient } from 'expo-linear-gradient';
 import { Ionicons } from '@expo/vector-icons';
@@ -17,7 +16,6 @@ import { COLORS, GRADIENTS } from '../../styles/globalStyles';
 
 export default function ProfileScreen({ navigation }) {
   const insets = useSafeAreaInsets();
-  const [modalVisible, setModalVisible] = useState(false);
   
   // Sample user data - this would come from your user state/context
   const [userData] = useState({
@@ -194,79 +192,13 @@ export default function ProfileScreen({ navigation }) {
     if (!userData.hhcData) return null;
 
     return (
-      <TouchableOpacity 
-        style={styles.hhcStampContainer}
-        onPress={() => setModalVisible(true)}
-        activeOpacity={0.7}
-      >
+      <View style={styles.hhcStampContainer}>
         <Text style={styles.hhcStampText}>{userData.hhcData.code}</Text>
         <Text style={styles.hhcStampVersion}>v{userData.hhcData.version}</Text>
-      </TouchableOpacity>
+      </View>
     );
   };
 
-  // HHC Explanation Modal
-  const renderHHCModal = () => {
-    return (
-      <Modal
-        animationType="slide"
-        transparent={true}
-        visible={modalVisible}
-        onRequestClose={() => setModalVisible(false)}
-      >
-        <View style={styles.modalOverlay}>
-          <View style={styles.modalContainer}>
-            <View style={styles.modalHeader}>
-              <Text style={styles.modalTitle}>Human Hex Code (HHC)</Text>
-              <TouchableOpacity 
-                onPress={() => setModalVisible(false)}
-                style={styles.modalCloseButton}
-              >
-                <Ionicons name="close" size={24} color={COLORS.textSecondary} />
-              </TouchableOpacity>
-            </View>
-            
-            <ScrollView style={styles.modalContent}>
-              <Text style={styles.modalText}>
-                Your <Text style={styles.modalBoldText}>Human Hex Code (HHC)</Text> is a unique 256-dimensional personality signature created by analyzing your conversations, preferences, and behavioral patterns.
-              </Text>
-              
-              <Text style={styles.modalSubheading}>What it includes:</Text>
-              <Text style={styles.modalBullet}>• Big Five personality traits</Text>
-              <Text style={styles.modalBullet}>• Attachment and communication styles</Text>
-              <Text style={styles.modalBullet}>• Core values and interests</Text>
-              <Text style={styles.modalBullet}>• Relationship patterns and preferences</Text>
-              
-              <Text style={styles.modalSubheading}>How it helps:</Text>
-              <Text style={styles.modalText}>
-                Other users' AI can instantly understand your personality for more accurate compatibility matching, while keeping your data secure and private.
-              </Text>
-              
-              <View style={styles.modalStatsContainer}>
-                <View style={styles.modalStat}>
-                  <Text style={styles.modalStatLabel}>Confidence</Text>
-                  <Text style={styles.modalStatValue}>{Math.round(userData.hhcData?.confidence * 100)}%</Text>
-                </View>
-                <View style={styles.modalStat}>
-                  <Text style={styles.modalStatLabel}>Last Updated</Text>
-                  <Text style={styles.modalStatValue}>
-                    {userData.hhcData?.generated_at ? new Date(userData.hhcData.generated_at).toLocaleDateString() : 'N/A'}
-                  </Text>
-                </View>
-              </View>
-            </ScrollView>
-            
-            <TouchableOpacity 
-              style={styles.modalButton}
-              onPress={() => setModalVisible(false)}
-            >
-              <Text style={styles.modalButtonText}>Got it!</Text>
-            </TouchableOpacity>
-          </View>
-        </View>
-      </Modal>
-    );
-  };
 
   return (
     <SafeAreaView style={styles.container}>
@@ -347,16 +279,14 @@ export default function ProfileScreen({ navigation }) {
               <Ionicons name="chatbubbles" size={24} color="rgba(255, 255, 255, 0.6)" />
             </View>
           </TouchableOpacity>
-          {/* Discovery heart tab removed - matches will be sent as chat messages instead
           <TouchableOpacity
             style={styles.toolbarIcon}
-            onPress={() => navigation?.navigate?.('DiscoveryScreen')}
+            onPress={() => navigation?.navigate?.('MatchesStack')}
           >
             <View style={styles.iconContainer}>
-              <Ionicons name="heart" size={24} color="rgba(255, 255, 255, 0.6)" />
+              <Ionicons name="list" size={24} color="rgba(255, 255, 255, 0.6)" />
             </View>
           </TouchableOpacity>
-          */}
           <TouchableOpacity style={styles.toolbarIcon}>
             <View style={[styles.iconContainer, styles.activeIcon]}>
               <Ionicons name="person" size={24} color="#4A2C6D" />
@@ -368,8 +298,6 @@ export default function ProfileScreen({ navigation }) {
       {/* HHC Stamp - positioned in bottom-right corner */}
       {renderHHCStamp()}
 
-      {/* HHC Information Modal */}
-      {renderHHCModal()}
 
     </SafeAreaView>
   );

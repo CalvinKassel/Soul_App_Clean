@@ -19,12 +19,12 @@ export default function LoadingScreen({ onFinish }) {
     const timer = setTimeout(() => {
       Animated.timing(fadeAnim, {
         toValue: 0,
-        duration: 800,
+        duration: 500,
         useNativeDriver: true,
       }).start(() => {
         onFinish();
       });
-    }, 1500);
+    }, 500); // Much shorter timeout for testing
 
     return () => clearTimeout(timer);
   }, [fadeAnim, onFinish]);

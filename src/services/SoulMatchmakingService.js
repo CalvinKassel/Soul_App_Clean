@@ -42,8 +42,8 @@ export class SoulMatchmakingService {
       return {
         success: true,
         profileCompleteness: initResult.profileCompleteness,
-        welcomeMessage: initResult.initialMessage,
-        recommendations: await this.getInitialRecommendations()
+        welcomeMessage: initResult.initialMessage
+        // Don't auto-load recommendations - let conversation flow naturally
       };
     } catch (error) {
       console.error('Error initializing SoulMatchmakingService:', error);

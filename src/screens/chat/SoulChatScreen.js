@@ -25,13 +25,18 @@ import { useSafeAreaInsets } from 'react-native-safe-area-context';
 
 // Import the cotton candy gradient color theme
 import { COLORS, GRADIENTS } from '../../styles/globalStyles';
-import ChatGPTService from '../../services/ChatGPTService';
+import VertexAIChatService from '../../services/VertexAIChatService';
+import AIProviderManager from '../../services/AIProviderManager';
 import SoulMatchmakingService from '../../services/SoulMatchmakingService';
 import MatchmakingBackendService from '../../services/MatchmakingBackendService';
 import { useScreenMoodGradient } from '../../hooks/useMoodGradient';
 import MoodAnalysisService from '../../services/MoodAnalysisService';
 import { CompactMoodIndicator } from '../../components/MoodIndicator';
 import RecommendationCard from '../../components/chat/RecommendationCard';
+import HighResolutionHHCService from '../../services/compatibility/HighResolutionHHCService';
+import SocraticPersonalityAnalyzer from '../../services/compatibility/SocraticPersonalityAnalyzer';
+import EnhancedSoulAIService from '../../services/EnhancedSoulAIService';
+import PersonalityInsightsDashboard from '../../components/insights/PersonalityInsightsDashboard';
 
 export default function SoulChatScreen({ navigation, route }) {
   const insets = useSafeAreaInsets();
@@ -43,18 +48,54 @@ export default function SoulChatScreen({ navigation, route }) {
   const [isStreamingActive, setIsStreamingActive] = useState(false);
   const [isMatchmakingMode, setIsMatchmakingMode] = useState(true);
   const [matchmakingInitialized, setMatchmakingInitialized] = useState(false);
+  const [isInitializing, setIsInitializing] = useState(true);
+  
+  // Enhanced SoulAI state
+  const [memoryInsights, setMemoryInsights] = useState(null);
+  const [showMemoryInsights, setShowMemoryInsights] = useState(false);
+  const [enhancedSoulAIInitialized, setEnhancedSoulAIInitialized] = useState(false);
   
   const flatListRef = useRef(null);
   const typingAnimation = useRef(new Animated.Value(0)).current;
 
-  // Initialize matchmaking system
+  // Initialize systems
   useEffect(() => {
-    initializeMatchmaking();
+    initializeServices();
   }, []);
 
-  const initializeMatchmaking = async () => {
+  const initializeServices = async () => {
     try {
-      console.log('🚀 Initializing matchmaking system...');
+      console.log('🚀 Initializing SoulAI services (Enhanced + Matchmaking)...');
+      setIsInitializing(true);
+      
+      // Initialize Enhanced SoulAI Service first
+      console.log('🧠 Initializing Enhanced SoulAI Service...');
+      const enhancedInit = await EnhancedSoulAIService.initialize('user_001');
+      
+      if (enhancedInit.success) {
+        console.log('✅ Enhanced SoulAI Service initialized successfully');
+        setEnhancedSoulAIInitialized(true);
+        setMemoryInsights(enhancedInit.memoryInsights || null);
+        
+        // Check if user has completed onboarding
+        const hasOnboarded = enhancedInit.memoryInsights?.coreMemory?.has_onboarded;
+        if (!hasOnboarded) {
+          console.log('👋 First-time user detected, showing onboarding...');
+          // setShowOnboarding(true);
+          setIsFirstTimeUser(true);
+          setIsInitializing(false);
+          return; // Skip regular initialization for first-time users
+        } else {
+          setIsFirstTimeUser(false);
+        }
+      } else {
+        console.warn('⚠️ Enhanced SoulAI Service initialization failed:', enhancedInit.error);
+        // For new users without backend, still show onboarding
+        // setShowOnboarding(true);
+        setIsFirstTimeUser(true);
+        setIsInitializing(false);
+        return;
+      }
       
       // Sample user profile - in real app this would come from user state/context
       const userProfile = {
@@ -75,6 +116,9 @@ export default function SoulChatScreen({ navigation, route }) {
         }
       };
 
+      // Initialize matchmaking system
+      console.log('🌐 Initializing matchmaking system...');
+      
       // Try new backend service first
       console.log('🌐 Attempting to initialize with backend service...');
       const backendResult = await MatchmakingBackendService.initialize('user_001', userProfile);
@@ -164,6 +208,24 @@ export default function SoulChatScreen({ navigation, route }) {
 
     setIsAIThinking(true);
 
+    // Set up timeout to prevent infinite thinking dots
+    const typingTimeout = setTimeout(() => {
+      setIsAIThinking(false);
+      setIsStreamingActive(false);
+      setStreamingMessage('');
+      
+      // Add timeout error message
+      const timeoutMessage = {
+        id: 'timeout_' + Date.now(),
+        from: 'ai',
+        text: "I'm sorry, I'm having trouble connecting. Could you please try again?",
+        timestamp: new Date().toISOString(),
+        type: 'error'
+      };
+      setMessages(prev => [...prev, timeoutMessage]);
+      console.warn('Frontend timed out waiting for AI response.');
+    }, 20000); // 20-second timeout
+
     try {
       let response;
       
@@ -183,6 +245,7 @@ export default function SoulChatScreen({ navigation, route }) {
           response = await MatchmakingBackendService.processMatchmakingMessage(currentInput, messages);
           
           if (response.success) {
+            clearTimeout(typingTimeout);
             console.log('✅ Backend matchmaking response received');
             // Add matchmaking response messages
             setMessages(prev => [...prev, ...response.messages]);
@@ -199,6 +262,7 @@ export default function SoulChatScreen({ navigation, route }) {
           response = await SoulMatchmakingService.processMatchmakingMessage(currentInput);
           
           if (response.success) {
+            clearTimeout(typingTimeout);
             // Add matchmaking response messages
             setMessages(prev => [...prev, ...response.messages]);
             setIsAIThinking(false);
@@ -223,7 +287,7 @@ export default function SoulChatScreen({ navigation, route }) {
 
       setMessages(prev => [...prev, aiMessagePlaceholder]);
 
-      await ChatGPTService.sendMessage(currentInput, {
+      await VertexAIChatService.sendMessage(currentInput, {
         onStart: () => {
           // Already set thinking to true
         },
@@ -242,6 +306,7 @@ export default function SoulChatScreen({ navigation, route }) {
         },
         
         onComplete: (finalResponse) => {
+          clearTimeout(typingTimeout);
           setIsAIThinking(false);
           setIsStreamingActive(false);
           setStreamingMessage('');
@@ -263,6 +328,7 @@ export default function SoulChatScreen({ navigation, route }) {
         },
         
         onError: (error) => {
+          clearTimeout(typingTimeout);
           setIsAIThinking(false);
           setIsStreamingActive(false);
           setStreamingMessage('');
@@ -282,6 +348,7 @@ export default function SoulChatScreen({ navigation, route }) {
       });
       
     } catch (error) {
+      clearTimeout(typingTimeout);
       console.error('Send message error:', error);
       setIsAIThinking(false);
       setIsStreamingActive(false);
@@ -429,6 +496,11 @@ export default function SoulChatScreen({ navigation, route }) {
   };
 
   const renderMessage = ({ item }) => {
+    // Defensive Guard: Prevent crashes from invalid items
+    if (!item || !item.id) {
+      return null;
+    }
+
     const isUser = item.from === 'user';
     const isWelcome = item.type === 'welcome';
     const isMatchmaking = item.type === 'matchmaking';
@@ -703,7 +775,7 @@ export default function SoulChatScreen({ navigation, route }) {
 
       setMessages(prev => [...prev, aiMessagePlaceholder]);
 
-      await ChatGPTService.sendMessage(replyText, {
+      await VertexAIChatService.sendMessage(replyText, {
         onToken: (token, fullResponse) => {
           setMessages(prev => prev.map(msg => 
             msg.id === aiMessageId 
@@ -741,6 +813,7 @@ export default function SoulChatScreen({ navigation, route }) {
       setQuickReplyProcessing(false);
     }
   }, [quickReplyProcessing, isAIThinking, matchmakingInitialized, isMatchmakingMode, messages]);
+  
 
   // Render thinking indicator
   const renderThinkingIndicator = () => {
@@ -806,6 +879,20 @@ export default function SoulChatScreen({ navigation, route }) {
           <View style={styles.headerLeft}>
             <Text style={styles.soulHeading}>Soul</Text>
           </View>
+          
+          {/* Personality Insights Toggle */}
+          {enhancedSoulAIInitialized && memoryInsights && (
+            <TouchableOpacity
+              style={styles.memoryToggleButton}
+              onPress={() => setShowMemoryInsights(!showMemoryInsights)}
+            >
+              <Ionicons 
+                name="analytics" 
+                size={24} 
+                color="#4A90E2" 
+              />
+            </TouchableOpacity>
+          )}
         </LinearGradient>
       </View>
 
@@ -826,7 +913,7 @@ export default function SoulChatScreen({ navigation, route }) {
             ref={flatListRef}
             data={messages}
             renderItem={renderMessage}
-            keyExtractor={item => item.id}
+            keyExtractor={(item) => item.id?.toString() || Math.random().toString()}
             style={styles.messagesList}
             contentContainerStyle={styles.messagesContent}
             showsVerticalScrollIndicator={false}
@@ -912,6 +999,12 @@ export default function SoulChatScreen({ navigation, route }) {
         </View>
       </LinearGradient>
 
+      {/* Personality Insights Dashboard */}
+      <PersonalityInsightsDashboard
+        memoryInsights={memoryInsights}
+        visible={showMemoryInsights}
+        onClose={() => setShowMemoryInsights(false)}
+      />
       {/* Long Press Menu Modal */}
       {longPressMenuVisible && (
         <Modal
@@ -1434,5 +1527,12 @@ const styles = StyleSheet.create({
     color: '#333',
     marginLeft: 12,
     fontWeight: '500',
+  },
+  
+  // Memory Toggle Button
+  memoryToggleButton: {
+    padding: 8,
+    borderRadius: 20,
+    backgroundColor: "rgba(255, 255, 255, 0.9)",
   },
 });

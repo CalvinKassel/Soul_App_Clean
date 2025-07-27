@@ -287,25 +287,37 @@ export default function SoulChatScreen({ navigation, route }) {
 
       setMessages(prev => [...prev, aiMessagePlaceholder]);
 
-      await VertexAIChatService.sendMessage(currentInput, {
+      await AIProviderManager.sendMessage(currentInput, {
+        // 🎭 Personality adaptation parameters
+        userId: 'demo_user_001', // TODO: Get from auth/user context
+        userName: 'User', // TODO: Get from user profile
+        requestType: 'chat',
+        includeMatches: false,
+        conversationHistory: messages.slice(-10), // Last 10 messages for context
+        userPreferences: {}, // TODO: Get from user settings
         onStart: () => {
           // Already set thinking to true
         },
         
-        onToken: (token, fullResponse) => {
+        onToken: (token, fullResponse, providerName) => {
           setIsStreamingActive(true);
           setStreamingMessage(fullResponse);
           
           setMessages(prev => prev.map(msg => 
             msg.id === aiMessageId 
-              ? { ...msg, text: fullResponse, isStreaming: true }
+              ? { 
+                  ...msg, 
+                  text: fullResponse, 
+                  isStreaming: true,
+                  aiProvider: providerName // Track which AI provider responded
+                }
               : msg
           ));
 
           // Don't auto-scroll during streaming - let user scroll freely
         },
         
-        onComplete: (finalResponse) => {
+        onComplete: (finalResponse, providerName, personalityContext) => {
           clearTimeout(typingTimeout);
           setIsAIThinking(false);
           setIsStreamingActive(false);
@@ -317,10 +329,19 @@ export default function SoulChatScreen({ navigation, route }) {
                   ...msg, 
                   text: finalResponse, 
                   isStreaming: false,
-                  type: 'ai'
+                  type: 'ai',
+                  aiProvider: providerName,
+                  personalityStyle: personalityContext?.personalityStyle,
+                  matches: personalityContext?.matches,
+                  hhcSummary: personalityContext?.hhcSummary
                 }
               : msg
           ));
+
+          // 🎭 Log personality adaptation info for debugging
+          if (personalityContext?.personalityStyle) {
+            console.log('✨ AI responded with personality style:', personalityContext.personalityStyle.tone);
+          }
 
           setTimeout(() => {
             flatListRef.current?.scrollToEnd({ animated: true });

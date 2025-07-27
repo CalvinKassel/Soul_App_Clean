@@ -1,10 +1,12 @@
 // AI Provider Manager for SoulAI
 // Intelligently manages multiple AI providers (OpenAI, Google AI, Anthropic)
 // Provides failover, load balancing, and optimal provider selection
+// Now includes HHC-based personality adaptation for truly personalized interactions
 
 import ChatGPTService from './ChatGPTService';
 import GoogleAIService from './GoogleAIService';
 import EnhancedSoulAIService from './EnhancedSoulAIService';
+import { agentOrchestrator } from './personality/AgentOrchestrator';
 
 class AIProviderManager {
   constructor() {
@@ -116,7 +118,7 @@ class AIProviderManager {
     };
   }
 
-  // Send message with automatic failover
+  // Send message with automatic failover and personality adaptation
   async sendMessage(message, options = {}) {
     const {
       onStart = () => {},
@@ -124,12 +126,64 @@ class AIProviderManager {
       onComplete = () => {},
       onError = () => {},
       preferredProvider = null,
-      maxRetries = 2
+      maxRetries = 2,
+      // New personality adaptation options
+      userId = null,
+      userName = null,
+      requestType = 'chat',
+      includeMatches = false,
+      conversationHistory = [],
+      userPreferences = {}
     } = options;
 
     let lastError = null;
     let attempts = 0;
     this.failoverCount = 0;
+
+    // 🎭 PERSONALITY ADAPTATION: Orchestrate personalized interaction
+    let personalizedContext = null;
+    let finalMessage = message;
+    
+    if (userId) {
+      try {
+        console.log('🎭 Orchestrating personalized interaction for user:', userId);
+        
+        personalizedContext = await agentOrchestrator.orchestrateInteraction({
+          userId,
+          userMessage: message,
+          userName,
+          requestType,
+          includeMatches,
+          conversationHistory,
+          userPreferences
+        });
+
+        // Use the personalized system prompt - this is the key innovation!
+        finalMessage = personalizedContext.systemPrompt + '\n\nUser: ' + message;
+        
+        console.log(`✨ Applied ${personalizedContext.interactionProfile.tone} personality style`);
+        
+        // Enhance callbacks with personality context
+        const originalOnComplete = onComplete;
+        const enhancedOnComplete = (finalResponse, providerName) => {
+          // Include personality context in the response
+          originalOnComplete(finalResponse, providerName, {
+            personalityStyle: personalizedContext.interactionProfile,
+            matches: personalizedContext.matches,
+            hhcSummary: personalizedContext.userProfile?.hhcSummary
+          });
+        };
+        
+        // Update options with enhanced callback
+        options = { ...options, onComplete: enhancedOnComplete };
+        
+      } catch (error) {
+        console.warn('⚠️ Personality orchestration failed, using standard interaction:', error.message);
+        // Continue with original message if personality adaptation fails
+      }
+    } else {
+      console.log('ℹ️ No userId provided, using standard AI interaction');
+    }
 
     while (attempts < maxRetries && this.failoverCount < this.maxFailovers) {
       const provider = preferredProvider ? 
@@ -143,7 +197,7 @@ class AIProviderManager {
       try {
         console.log(`🤖 Attempting message with ${provider.name} (attempt ${attempts + 1})`);
         
-        const response = await provider.service.sendMessage(message, {
+        const response = await provider.service.sendMessage(finalMessage, {
           onStart: () => {
             console.log(`✅ ${provider.name} started processing`);
             onStart();

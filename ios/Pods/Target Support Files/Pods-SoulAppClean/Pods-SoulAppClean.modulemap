@@ -1,6 +1,0 @@
-module Pods_SoulAppClean {
-  umbrella header "Pods-SoulAppClean-umbrella.h"
-
-  export *
-  module * { export * }
-}

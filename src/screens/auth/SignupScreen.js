@@ -1,4 +1,4 @@
-// SoulAppClean/src/screens/auth/SignupScreen.js
+// SoulAI_Frontend/src/screens/auth/SignupScreen.js
 // Signup screen with cotton candy gradient theme
 
 import React, { useState } from 'react';

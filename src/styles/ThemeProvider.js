@@ -1,4 +1,4 @@
-// SoulAppClean/src/styles/ThemeProvider.js
+// SoulAI_Frontend/src/styles/ThemeProvider.js
 // Safe Theme Provider with your SoulAI colors
 
 import React, { createContext, useContext } from 'react';

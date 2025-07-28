@@ -137,7 +137,7 @@ npm start
 npm run dev
 ```
 
-### Frontend (SoulAppClean/)
+### Frontend (SoulAI_Frontend/)
 ```bash
 # Start Expo development server
 npm start

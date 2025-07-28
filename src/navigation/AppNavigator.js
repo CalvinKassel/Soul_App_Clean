@@ -1,4 +1,4 @@
-// SoulAppClean/src/navigation/AppNavigator.js
+// SoulAI_Frontend/src/navigation/AppNavigator.js
 // Main navigation component that handles all app navigation
 
 import React from 'react';

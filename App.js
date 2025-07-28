@@ -1,4 +1,4 @@
-// SoulAppClean/App.js
+// SoulAI_Frontend/App.js
 // Complete working App.js file based on your project structure
 
 import React, { useState } from 'react';

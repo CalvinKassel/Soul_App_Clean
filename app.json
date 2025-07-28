@@ -1,7 +1,7 @@
 {
   "expo": {
-    "name": "SoulAppClean",
-    "slug": "SoulAppClean",
+    "name": "SoulAI_Frontend",
+    "slug": "SoulAI_Frontend",
     "version": "1.0.0",
     "orientation": "portrait",
     "icon": "./assets/icon.png",
@@ -13,7 +13,8 @@
       "backgroundColor": "#ffffff"
     },
     "ios": {
-      "supportsTablet": true
+      "supportsTablet": true,
+      "bundleIdentifier": "com.anonymous.SoulAI-Frontend"
     },
     "android": {
       "adaptiveIcon": {
@@ -21,7 +22,7 @@
         "backgroundColor": "#ffffff"
       },
       "edgeToEdgeEnabled": true,
-      "package": "com.anonymous.SoulAppClean"
+      "package": "com.anonymous.SoulAI_Frontend"
     },
     "web": {
       "favicon": "./assets/favicon.png"

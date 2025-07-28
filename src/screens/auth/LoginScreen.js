@@ -1,4 +1,4 @@
-// SoulAppClean/src/screens/auth/LoginScreen.js
+// SoulAI_Frontend/src/screens/auth/LoginScreen.js
 // Simple, working login screen
 
 import React, { useState } from 'react';
